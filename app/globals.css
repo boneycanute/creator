@@ -116,6 +116,94 @@
   --sidebar-ring: oklch(0.442 0.017 285.786);
 }
 
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 0.8s infinite;
+}
+
+/* Blinking cursor animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: black;
+  animation: blink 1s step-end infinite;
+}
+
+.dark .cursor {
+  background-color: white;
+}
+
+/* Keyboard key styles */
+.key-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  height: 36px;
+  border: 2px solid black;
+  border-radius: 4px;
+  background-color: white;
+  position: relative;
+  box-shadow: 0 4px 0 0 rgba(0,0,0,0.2);
+  transition: all 0.1s ease;
+  padding: 0 16px;
+}
+
+.dark .key-container {
+  border-color: white;
+  background-color: black;
+  box-shadow: 0 4px 0 0 rgba(255,255,255,0.2);
+}
+
+.key-container.key-pressed {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
+}
+
+.dark .key-container.key-pressed {
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.2);
+}
+
+.key-cap {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  user-select: none;
+}
+
+.key-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  user-select: none;
+}
+
+/* Inverted colors for pressed keys */
+.key-container[style*="background-color: rgb(0, 0, 0)"] .key-cap,
+.key-container[style*="background-color: rgb(0, 0, 0)"] .key-text {
+  color: white;
+}
+
+.dark .key-container[style*="background-color: rgb(255, 255, 255)"] .key-cap,
+.dark .key-container[style*="background-color: rgb(255, 255, 255)"] .key-text {
+  color: black;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
