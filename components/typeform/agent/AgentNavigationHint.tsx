@@ -164,66 +164,93 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
             <div className="flex items-center space-x-8">
               {!isFirstQuestion && (
                 <>
-                  <span className="text-sm text-black dark:text-white">Previous</span>
-                  <div className="relative">
-                    <div 
-                      className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800 dark:to-gray-200" 
-                      style={{ 
-                        top: '2px',
-                        borderRadius: '4px',
-                        opacity: escPressed ? 0 : 0.3,
-                        transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                    />
-                    <kbd 
-                      className={`px-4 py-2 text-sm font-medium relative ${
-                        escPressed 
-                          ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
-                          : "bg-white text-black dark:bg-black dark:text-white"
-                      }`}
-                      style={{
-                        borderRadius: '4px',
-                        transform: escPressed ? 'translateY(2px)' : 'translateY(0)',
-                        transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: escPressed ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.1)'
-                      }}
-                    >
-                      Esc
-                    </kbd>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-black dark:text-white font-medium">Previous</span>
+                    <div className="relative">
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800 dark:to-gray-200" 
+                        style={{ 
+                          top: '2px',
+                          borderRadius: '6px',
+                          opacity: escPressed ? 0 : 0.3,
+                          transition: 'opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      />
+                      <kbd 
+                        className={`px-4 py-2 text-sm font-medium relative ${
+                          escPressed 
+                            ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
+                            : "bg-white text-black dark:bg-black dark:text-white"
+                        }`}
+                        style={{
+                          borderRadius: '6px',
+                          transform: escPressed ? 'translateY(2px)' : 'translateY(0)',
+                          transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: escPressed 
+                            ? 'none' 
+                            : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '60px'
+                        }}
+                      >
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                            <path d="m15 18-6-6 6-6"/>
+                          </svg>
+                          <span>Esc</span>
+                        </span>
+                      </kbd>
+                    </div>
                   </div>
                 </>
               )}
               
               <Keyboard className="w-4 h-4 text-black dark:text-white" />
               
-              <div className="relative">
-                <div 
-                  className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800 dark:to-gray-200" 
-                  style={{ 
-                    top: '2px',
-                    borderRadius: '4px',
-                    opacity: enterPressed ? 0 : 0.3,
-                    transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                />
-                <kbd 
-                  className={`px-4 py-2 text-sm font-medium relative ${
-                    enterPressed 
-                      ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
-                      : "bg-white text-black dark:bg-black dark:text-white"
-                  }`}
-                  style={{
-                    borderRadius: '4px',
-                    transform: enterPressed ? 'translateY(2px)' : 'translateY(0)',
-                    transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: enterPressed ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  Enter
-                </kbd>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800 dark:to-gray-200" 
+                    style={{ 
+                      top: '2px',
+                      borderRadius: '6px',
+                      opacity: enterPressed ? 0 : 0.3,
+                      transition: 'opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  />
+                  <kbd 
+                    className={`px-4 py-2 text-sm font-medium relative ${
+                      enterPressed 
+                        ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
+                        : "bg-white text-black dark:bg-black dark:text-white"
+                    }`}
+                    style={{
+                      borderRadius: '6px',
+                      transform: enterPressed ? 'translateY(2px)' : 'translateY(0)',
+                      transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: enterPressed 
+                        ? 'none' 
+                        : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '60px'
+                    }}
+                  >
+                    <span className="flex items-center">
+                      <span>Enter</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                        <path d="m9 18 6-6-6-6"/>
+                      </svg>
+                    </span>
+                  </kbd>
+                </div>
+                <span className="text-sm text-black dark:text-white font-medium">Next</span>
               </div>
-              
-              <span className="text-sm text-black dark:text-white">Next</span>
             </div>
           </div>
         </motion.div>
