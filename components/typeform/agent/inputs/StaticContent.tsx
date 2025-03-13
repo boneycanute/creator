@@ -67,14 +67,6 @@ export const StaticContent: React.FC<StaticContentProps> = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div
-          className="mb-8 p-4 bg-black dark:bg-white rounded-full"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-        >
-          <Bot className="h-16 w-16 text-white dark:text-black" />
-        </motion.div>
         
         <motion.h1
           className="text-4xl md:text-5xl font-bold mb-4 text-black dark:text-white"
