@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { Bot, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CustomAuroraText } from "@/components/magicui/custom-aurora-text";
 
 interface StaticContentProps {
   questionId: string;
@@ -94,14 +95,20 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
         transition={{ duration: 0.5 }}
       >      
         
-        <motion.h1
-          className="text-4xl font-bold mb-4 text-black dark:text-white"
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
+          className="mb-4"
         >
-          Build That Idea Wizard
-        </motion.h1>
+          <CustomAuroraText 
+            className="text-4xl md:text-8xl font-bold text-black dark:text-white"
+            colors={["#ea76cb", "#8839ef"]}
+            speed={2}
+          >
+            Build That Idea
+          </CustomAuroraText>
+        </motion.div>
     
         <motion.p
           className="text-lg text-black/70 dark:text-white/70 mb-12"
