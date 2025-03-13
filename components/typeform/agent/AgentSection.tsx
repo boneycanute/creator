@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { AgentQuestion } from "@/lib/agent-store";
+import { Typewriter } from "@/components/typeform/agent/Typewriter";
 
 interface AgentSectionProps {
   question: AgentQuestion;
   isActive: boolean;
-  direction: number; // 1 for forward, -1 for backward
+  direction: number;
   children: React.ReactNode;
 }
 
@@ -17,14 +18,30 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   direction,
   children,
 }) => {
-  // State for typing animation
-  const [displayText, setDisplayText] = useState("");
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [showChildren, setShowChildren] = useState(false);
 
-  // Animation variants for the section
+  // Prevent hydration errors by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show children after typing animation completes
+  useEffect(() => {
+    if (isActive) {
+      const timer = setTimeout(() => {
+        setShowChildren(true);
+      }, 1000); // Adjust timing based on your typing animation duration
+      return () => clearTimeout(timer);
+    } else {
+      setShowChildren(false);
+    }
+  }, [isActive]);
+
+  // Animation variants
   const variants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? "100%" : "-100%",
+      x: direction > 0 ? 1000 : -1000,
       opacity: 0,
     }),
     center: {
@@ -32,86 +49,58 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
       opacity: 1,
     },
     exit: (direction: number) => ({
-      x: direction < 0 ? "100%" : "-100%",
+      x: direction < 0 ? 1000 : -1000,
       opacity: 0,
     }),
   };
 
-  // Typing animation effect
-  useEffect(() => {
-    if (isActive) {
-      setDisplayText("");
-      setIsTypingComplete(false);
-      
-      const text = question.text;
-      let currentIndex = 0;
-      
-      // Fast typing animation (30ms per character)
-      const typingInterval = setInterval(() => {
-        if (currentIndex <= text.length) {
-          setDisplayText(text.substring(0, currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setIsTypingComplete(true);
-        }
-      }, 30);
-      
-      return () => clearInterval(typingInterval);
-    }
-  }, [isActive, question.text]);
-
-  // Skip typing animation for static and loading screens
-  useEffect(() => {
-    if (isActive && (question.type === 'static' || question.type === 'loading')) {
-      setDisplayText(question.text);
-      setIsTypingComplete(true);
-    }
-  }, [isActive, question.type, question.text]);
+  if (!mounted) {
+    return <div className="h-64"></div>; // Placeholder during SSR
+  }
 
   return (
-    <AnimatePresence mode="wait" initial={false} custom={direction}>
-      {isActive && (
-        <motion.div
-          className="absolute w-full max-w-3xl"
-          key={question.id}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        >
-          <div className="flex flex-col w-full">
-            {/* Don't show the heading for welcome and completion screens */}
-            {question.id !== 'welcome' && question.id !== 'completion' && (
-              <motion.h2
-                className="text-2xl md:text-3xl font-bold mb-6 text-black dark:text-white text-left"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                {displayText}
-                {!isTypingComplete && (
-                  <span className="inline-block w-1 h-6 ml-1 bg-black dark:bg-white animate-blink"></span>
-                )}
-              </motion.h2>
+    <motion.div
+      className={`absolute w-full ${isActive ? "z-10" : "z-0"}`}
+      custom={direction}
+      variants={variants}
+      initial="enter"
+      animate={isActive ? "center" : "exit"}
+      exit="exit"
+      transition={{
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 },
+      }}
+    >
+      <div className="w-full max-w-2xl mx-auto">
+        {/* Question Text with Typing Animation */}
+        <div className="mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
+            {isActive ? (
+              <Typewriter text={question.text} delay={30} />
+            ) : (
+              question.text
             )}
-            <motion.div
-              className="w-full"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ 
-                opacity: isTypingComplete || question.type === 'static' || question.type === 'loading' ? 1 : 0, 
-                y: isTypingComplete || question.type === 'static' || question.type === 'loading' ? 0 : 10 
-              }}
-              transition={{ delay: 0.1 }}
-            >
-              {children}
-            </motion.div>
-          </div>
+          </h2>
+          {question.descriptions && question.descriptions.length > 0 && (
+            <p className="text-lg text-black/70 dark:text-white/70">
+              {question.descriptions[0]}
+            </p>
+          )}
+        </div>
+
+        {/* Input Component */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: showChildren ? 1 : 0,
+            y: showChildren ? 0 : 20
+          }}
+          transition={{ duration: 0.5 }}
+        >
+          {children}
         </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </motion.div>
   );
 };
 

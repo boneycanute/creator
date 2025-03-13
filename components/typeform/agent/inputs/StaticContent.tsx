@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
+import { Bot, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Bot, Check } from "lucide-react";
 
 interface StaticContentProps {
   questionId: string;
@@ -17,39 +17,49 @@ export const StaticContent: React.FC<StaticContentProps> = ({
   isWelcome = false,
   isCompletion = false,
 }) => {
-  const { goToNextQuestion, getAllResponses, getAgentName } = useAgentFormStore();
-  const agentName = getAgentName();
-  const responses = getAllResponses();
+  const [mounted, setMounted] = useState(false);
+  const { goToNextQuestion, getAllResponses } = useAgentFormStore();
 
-  // Get summary of selected options for completion screen
+  // Prevent hydration errors by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Get a summary of all responses for the completion screen
   const getSummary = () => {
-    const summary: Record<string, any> = {};
-    
-    responses.forEach(response => {
+    const responses = getAllResponses();
+    const summary = {
+      agentName: "",
+      purpose: "",
+      targetUsers: "",
+      style: "",
+      color: "",
+      plan: "",
+      files: [] as string[],
+    };
+
+    responses.forEach((response) => {
       switch (response.questionId) {
-        case 'agentName':
-          summary.name = response.answer;
+        case "agentName":
+          summary.agentName = response.answer as string;
           break;
-        case 'agentPurpose':
-          summary.purpose = response.answer;
+        case "agentPurpose":
+          summary.purpose = response.answer as string;
           break;
-        case 'targetUsers':
-          summary.users = response.answer;
+        case "targetUsers":
+          summary.targetUsers = response.answer as string;
           break;
-        case 'promptStyle':
-          summary.style = response.answer;
+        case "promptStyle":
+          summary.style = response.answer as string;
           break;
-        case 'pricingPlan':
-          summary.plan = response.answer;
+        case "themeColor":
+          summary.color = response.answer as string;
           break;
-        case 'knowledgeBase':
-          summary.customKnowledge = response.answer === "Yes, upload documents for specialized knowledge";
+        case "pricingPlan":
+          summary.plan = response.answer as string;
           break;
-        case 'fileUpload':
-          if (response.answer) {
-            const files = response.answer as any[];
-            summary.files = files.length;
-          }
+        case "knowledgeFiles":
+          summary.files = response.answer as string[];
           break;
       }
     });
@@ -59,6 +69,10 @@ export const StaticContent: React.FC<StaticContentProps> = ({
 
   const summary = isCompletion ? getSummary() : null;
 
+  if (!mounted) {
+    return <div className="h-64"></div>; // Placeholder during SSR
+  }
+
   if (isWelcome) {
     return (
       <motion.div
@@ -66,17 +80,25 @@ export const StaticContent: React.FC<StaticContentProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-      >
+      >      
+        <motion.div 
+          className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-8"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+        >
+          <Bot className="w-10 h-10 text-white" />
+        </motion.div>
         
         <motion.h1
-          className="text-4xl md:text-5xl font-bold mb-4 text-black dark:text-white"
+          className="text-4xl font-bold mb-4 text-black dark:text-white"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          Hi I'm KEN-E
+          Create Your AI Assistant
         </motion.h1>
-        
+    
         <motion.p
           className="text-lg text-black/70 dark:text-white/70 mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -126,7 +148,7 @@ export const StaticContent: React.FC<StaticContentProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          {agentName} is ready!
+          {summary.agentName} is Ready!
         </motion.h1>
         
         <motion.p
@@ -135,37 +157,57 @@ export const StaticContent: React.FC<StaticContentProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          Your custom AI assistant has been successfully created
+          Your AI assistant has been created successfully. Here's a summary of what you've set up:
         </motion.p>
         
         <motion.div
-          className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg w-full mb-8 text-left"
+          className="bg-black/5 dark:bg-white/10 rounded-lg p-6 mb-8 w-full text-left"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
         >
-          <h3 className="font-medium text-lg mb-4 text-black dark:text-white">Summary</h3>
-          
-          <ul className="space-y-2">
-            <li className="flex items-start">
-              <span className="font-medium mr-2">Name:</span> {summary.name}
-            </li>
-            <li className="flex items-start">
-              <span className="font-medium mr-2">Purpose:</span> {summary.purpose}
-            </li>
-            <li className="flex items-start">
-              <span className="font-medium mr-2">Target Users:</span> {summary.users}
-            </li>
-            <li className="flex items-start">
-              <span className="font-medium mr-2">Style:</span> {summary.style}
-            </li>
-            <li className="flex items-start">
-              <span className="font-medium mr-2">Plan:</span> {summary.plan}
-            </li>
-            <li className="flex items-start">
-              <span className="font-medium mr-2">Custom Knowledge:</span> {summary.customKnowledge ? `Yes (${summary.files || 0} files)` : "No"}
-            </li>
-          </ul>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <h3 className="font-semibold text-black dark:text-white">Name</h3>
+              <p className="text-black/70 dark:text-white/70">{summary.agentName}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-black dark:text-white">Purpose</h3>
+              <p className="text-black/70 dark:text-white/70">{summary.purpose}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-black dark:text-white">Target Users</h3>
+              <p className="text-black/70 dark:text-white/70">{summary.targetUsers}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-black dark:text-white">Conversational Style</h3>
+              <p className="text-black/70 dark:text-white/70">{summary.style}</p>
+            </div>
+            {summary.color && (
+              <div>
+                <h3 className="font-semibold text-black dark:text-white">Theme Color</h3>
+                <div className="flex items-center">
+                  <div 
+                    className="w-6 h-6 rounded-full mr-2" 
+                    style={{ backgroundColor: summary.color }}
+                  ></div>
+                  <p className="text-black/70 dark:text-white/70">{summary.color}</p>
+                </div>
+              </div>
+            )}
+            {summary.plan && (
+              <div>
+                <h3 className="font-semibold text-black dark:text-white">Pricing Plan</h3>
+                <p className="text-black/70 dark:text-white/70">{summary.plan}</p>
+              </div>
+            )}
+            {summary.files && summary.files.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-black dark:text-white">Knowledge Files</h3>
+                <p className="text-black/70 dark:text-white/70">{summary.files.length} file(s) uploaded</p>
+              </div>
+            )}
+          </div>
         </motion.div>
         
         <motion.div
@@ -174,20 +216,23 @@ export const StaticContent: React.FC<StaticContentProps> = ({
           transition={{ delay: 1.1 }}
         >
           <Button 
+            onClick={() => window.location.href = "/dashboard"}
             className="px-8 py-6 text-lg"
             size="lg"
           >
-            Start Conversation <Bot className="ml-2 h-5 w-5" />
+            Go to Dashboard <Sparkles className="ml-2 h-5 w-5" />
           </Button>
         </motion.div>
       </motion.div>
     );
   }
 
-  // Default static content
+  // Default return for any other static content
   return (
-    <div className="text-center p-8">
-      <p className="text-lg">Content for {questionId}</p>
+    <div className="py-8">
+      <p className="text-lg text-black/70 dark:text-white/70">
+        {questionId}
+      </p>
     </div>
   );
 };

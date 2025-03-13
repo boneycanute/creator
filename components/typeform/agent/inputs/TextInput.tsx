@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 
@@ -20,35 +20,63 @@ export const TextInput: React.FC<TextInputProps> = ({
   validation,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { setResponse, getCurrentResponse } = useAgentFormStore();
+  const { setResponse, getCurrentResponse, goToNextQuestion } = useAgentFormStore();
   const currentResponse = getCurrentResponse();
-  const currentValue = currentResponse?.answer as string || "";
+  const [inputValue, setInputValue] = useState(currentResponse?.answer as string || "");
   const [error, setError] = useState<string | null>(null);
   const [charCount, setCharCount] = useState(0);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Focus the input when the component mounts
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-    setCharCount(currentValue.length);
-  }, [currentValue.length]);
+    setCharCount(inputValue.length);
+  }, [inputValue.length]);
 
-  const validateInput = (value: string): boolean => {
+  // Update the store with debouncing to prevent excessive re-renders
+  const debouncedSetResponse = useCallback((value: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      setResponse(questionId, value);
+    }, 300); // 300ms debounce
+  }, [questionId, setResponse]);
+
+  // Cleanup the timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const validateInput = (value: string, showError = true): boolean => {
     if (!validation) return true;
     
     if (validation.required && !value.trim()) {
-      setError("This field is required");
+      if (showError && hasAttemptedSubmit) {
+        setError("This field is required");
+      }
       return false;
     }
     
     if (validation.minLength && value.length < validation.minLength) {
-      setError(`Minimum ${validation.minLength} characters required`);
+      if (showError && hasAttemptedSubmit) {
+        setError(`Minimum ${validation.minLength} characters required`);
+      }
       return false;
     }
     
     if (validation.maxLength && value.length > validation.maxLength) {
-      setError(`Maximum ${validation.maxLength} characters allowed`);
+      if (showError && hasAttemptedSubmit) {
+        setError(`Maximum ${validation.maxLength} characters allowed`);
+      }
       return false;
     }
     
@@ -58,9 +86,39 @@ export const TextInput: React.FC<TextInputProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    setInputValue(value);
     setCharCount(value.length);
-    validateInput(value);
-    setResponse(questionId, value);
+    
+    // Only show validation errors if user has already attempted to submit
+    validateInput(value, hasAttemptedSubmit);
+    debouncedSetResponse(value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      // Mark that user has attempted to submit
+      setHasAttemptedSubmit(true);
+      
+      // Immediately update the store when Enter is pressed
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      // Update the response in the store
+      setResponse(questionId, inputValue);
+      
+      // Manually trigger the navigation
+      if (validateInput(inputValue, true)) {
+        // Use setTimeout to ensure the state update happens first
+        setTimeout(() => {
+          goToNextQuestion();
+        }, 0);
+      }
+      
+      // Prevent default behavior and stop propagation
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   return (
@@ -74,8 +132,9 @@ export const TextInput: React.FC<TextInputProps> = ({
         <input
           ref={inputRef}
           type="text"
-          value={currentValue}
+          value={inputValue}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={`w-full p-4 border-b-2 ${
             error ? "border-red-500" : "border-black dark:border-white"
@@ -89,7 +148,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           </div>
         )}
         
-        {error && (
+        {error && hasAttemptedSubmit && (
           <motion.p
             className="text-red-500 text-sm mt-1"
             initial={{ opacity: 0, y: -5 }}
@@ -98,19 +157,6 @@ export const TextInput: React.FC<TextInputProps> = ({
             {error}
           </motion.p>
         )}
-        
-        <motion.div
-          className="mt-2 text-xs text-black/60 dark:text-white/60 flex items-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7 }}
-          transition={{ delay: 0.6 }}
-        >
-          <span>Press</span>{" "}
-          <kbd className="mx-1 px-1.5 py-0.5 border border-black/60 dark:border-white/60 text-xs">
-            Enter
-          </kbd>{" "}
-          <span>to continue</span>
-        </motion.div>
       </motion.div>
     </div>
   );

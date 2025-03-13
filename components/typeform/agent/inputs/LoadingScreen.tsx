@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LoadingScreenProps {
   questionId: string;
@@ -45,79 +46,65 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           currentProgress = 0;
         } else {
           clearInterval(interval);
-          // Move to the next question after a short delay
-          setTimeout(() => {
-            goToNextQuestion();
-          }, 500);
+          setProgress(100);
         }
       }
     }, progressInterval);
     
     return () => clearInterval(interval);
-  }, [currentStep, loadingSteps.length, goToNextQuestion]);
+  }, [currentStep, loadingSteps.length]);
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <motion.div
-        className="flex flex-col items-center justify-center py-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <motion.div
-          animate={{ 
-            rotate: 360,
-            transition: { 
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "linear"
-            }
-          }}
-          className="mb-8"
-        >
-          <Loader2 className="h-16 w-16 text-black dark:text-white" />
-        </motion.div>
-        
-        <motion.h2
-          className="text-2xl font-bold mb-8 text-center text-black dark:text-white"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          Creating your AI agent...
-        </motion.h2>
-        
-        <motion.div
-          className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+      <div className="flex flex-col items-center text-center mb-8">
+        <div className="relative w-16 h-16 mb-6">
           <motion.div
-            className="bg-black dark:bg-white h-2 rounded-full"
-            initial={{ width: "0%" }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.1 }}
+            className="absolute inset-0 border-4 border-blue-200 rounded-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           />
-        </motion.div>
-        
-        <div className="h-8">
-          {loadingSteps.map((step, index) => (
-            <motion.p
-              key={index}
-              className="text-md text-black/80 dark:text-white/80 text-center"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ 
-                opacity: currentStep === index ? 1 : 0,
-                y: currentStep === index ? 0 : 10
-              }}
-              transition={{ duration: 0.3 }}
-            >
-              {step}
-            </motion.p>
-          ))}
+          <motion.div
+            className="absolute inset-0 border-4 border-blue-500 rounded-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{
+              clipPath: `inset(0 ${100 - progress}% 0 0)`,
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          </div>
         </div>
-      </motion.div>
+        
+        <h3 className="text-xl font-medium mb-2 text-black dark:text-white">
+          {loadingSteps[currentStep]}
+        </h3>
+        
+        <p className="text-black/60 dark:text-white/60">
+          {Math.round(progress)}% complete
+        </p>
+      </div>
+      
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-8">
+        <motion.div
+          className="bg-blue-500 h-2 rounded-full"
+          style={{ width: `${progress}%` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+        />
+      </div>
+      
+      {progress === 100 && (
+        <div className="flex justify-center mt-6">
+          <Button 
+            onClick={goToNextQuestion}
+            className="px-6 py-2"
+            variant="default"
+          >
+            Continue
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

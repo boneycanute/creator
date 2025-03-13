@@ -19,6 +19,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "react-textarea-autosize": "^8.5.8",
     "remark-gfm": "^4.0.1",
     "remeda": "^2.21.2",
     "shiki": "^1.29.2",

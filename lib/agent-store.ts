@@ -51,7 +51,7 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     // Section 1: Welcome
     {
       id: 'welcome',
-      text: "Hi I'm KEN-E",
+      text: "",
       type: 'static',
       required: false,
     },

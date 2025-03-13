@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAgentFormStore, AgentQuestion } from "@/lib/agent-store";
 import { AgentSection } from "@/components/typeform/agent/AgentSection";
@@ -13,6 +13,9 @@ import { StaticContent } from "@/components/typeform/agent/inputs/StaticContent"
 import { LoadingScreen } from "@/components/typeform/agent/inputs/LoadingScreen";
 import { AgentNavigationHint } from "@/components/typeform/agent/AgentNavigationHint";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/theme-provider";
+import { Moon, Sun } from "lucide-react";
+import { toast } from "sonner";
 
 interface AgentFormCloneProps {
   onSubmit?: (responses: any) => void;
@@ -29,43 +32,95 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     goToPreviousQuestion,
     getAllResponses,
     getAgentName,
+    getCurrentResponse,
   } = useAgentFormStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
 
-  // Handle keyboard navigation
+  // Prevent hydration errors by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle keyboard navigation - simplified to fix issues
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Only process Enter and Escape keys
+      if (e.key !== "Enter" && e.key !== "Escape") {
+        return;
+      }
+      
+      // Skip keyboard navigation when an input is focused
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        document.activeElement instanceof HTMLButtonElement ||
+        (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Only handle Enter/Escape when no input is focused
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
+        
+        // Check if current question is required and has a response
+        const currentQuestion = questions[currentQuestionIndex];
+        const currentResponse = getCurrentResponse();
+        
+        if (currentQuestion.required && 
+            (!currentResponse || 
+             !currentResponse.answer || 
+             (Array.isArray(currentResponse.answer) && currentResponse.answer.length === 0))) {
+          // Don't proceed if required field is empty
+          toast.error("This field is required", {
+            position: "top-center",
+            duration: 3000,
+          });
+          return;
+        }
+        
         goToNextQuestion();
       } else if (e.key === "Escape") {
         goToPreviousQuestion();
       }
     },
-    [goToNextQuestion, goToPreviousQuestion]
+    [goToNextQuestion, goToPreviousQuestion, questions, currentQuestionIndex, getCurrentResponse]
   );
 
   // Add keyboard event listeners
   useEffect(() => {
+    if (!mounted) return;
+    
     window.addEventListener("keydown", handleKeyDown);
+    
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyDown]);
+  }, [mounted, handleKeyDown]);
 
   // Handle form submission
   const handleSubmit = async () => {
-    if (currentQuestionIndex === questions.length - 1) {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
+    
+    try {
       const responses = getAllResponses();
       if (onSubmit) {
-        await onSubmit(responses);
+        onSubmit(responses);
       }
+      
+      // Navigate to the completion screen
+      const completionIndex = questions.findIndex(q => q.id === 'completion');
+      if (completionIndex !== -1) {
+        setCurrentQuestionIndex(completionIndex);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error("There was an error submitting your responses. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      console.log("Form submitted:", responses);
-    } else {
-      goToNextQuestion();
     }
   };
 
@@ -144,28 +199,44 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     }
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      goToNextQuestion();
-    } else {
-      handleSubmit();
-    }
+  // Toggle between light and dark mode
+  const { setTheme, theme } = useTheme();
+  
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      goToPreviousQuestion();
-    }
-  };
+  // Don't render anything during SSR to prevent hydration errors
+  if (!mounted) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-black p-4">
+    <div 
+      ref={formRef}
+      className="relative w-full h-screen bg-white dark:bg-gray-950 overflow-hidden"
+    >
+      <div className="absolute top-4 right-4 z-50">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="rounded-full w-10 h-10"
+        >
+          {theme === "light" ? (
+            <Moon className="h-5 w-5" />
+          ) : (
+            <Sun className="h-5 w-5" />
+          )}
+        </Button>
+      </div>
+      
       {/* Navigation Hint */}
       <AgentNavigationHint 
         currentIndex={currentQuestionIndex} 
         totalQuestions={questions.length}
-        onNext={handleNextQuestion}
-        onPrevious={handlePreviousQuestion}
+        onNext={goToNextQuestion}
+        onPrevious={goToPreviousQuestion}
         isFirstQuestion={currentQuestionIndex === 0}
         isLastQuestion={currentQuestionIndex === questions.length - 1}
       />

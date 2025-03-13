@@ -24,16 +24,6 @@ export const MultipleChoiceInput: React.FC<MultipleChoiceInputProps> = ({
   const selectedOption = currentResponse?.answer as string || "";
   const [selectedDescription, setSelectedDescription] = useState<string>("");
 
-  // Auto-advance on selection for default layout
-  useEffect(() => {
-    if (selectedOption && layout === "default") {
-      const timer = setTimeout(() => {
-        goToNextQuestion();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedOption, layout, goToNextQuestion]);
-
   // Update description when selection changes
   useEffect(() => {
     if (selectedOption && descriptions.length > 0) {
