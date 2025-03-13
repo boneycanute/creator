@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { Loader2 } from "lucide-react";
@@ -10,24 +10,45 @@ interface LoadingScreenProps {
   questionId: string;
 }
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({
+export const LoadingScreen: React.FC<LoadingScreenProps> = React.memo(({
   questionId,
 }) => {
   const { goToNextQuestion, getAgentName } = useAgentFormStore();
   const agentName = getAgentName();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const loadingSteps = [
+  // Memoize the loading steps to prevent unnecessary recalculations
+  const loadingSteps = useMemo(() => [
     `Configuring knowledge base for ${agentName}...`,
     `Setting up personality...`,
     `Training ${agentName} on your requirements...`,
     `Optimizing response patterns...`,
     `Finalizing your agent...`,
-  ];
+  ], [agentName]);
 
-  // Simulate loading process
+  // Set visibility after a short delay to ensure component is fully mounted
   useEffect(() => {
+    let isMounted = true;
+    
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        setIsVisible(true);
+      }
+    }, 100);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Simulate loading process - only start when component is visible
+  useEffect(() => {
+    if (!isVisible) return;
+    
+    let isMounted = true;
     const totalDuration = 5000; // 5 seconds total
     const stepDuration = totalDuration / loadingSteps.length;
     const progressInterval = 30; // Update progress every 30ms
@@ -36,6 +57,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
     let currentProgress = 0;
     
     const interval = setInterval(() => {
+      if (!isMounted) return;
+      
       currentProgress += progressStep;
       setProgress(Math.min(currentProgress, 100));
       
@@ -51,8 +74,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
       }
     }, progressInterval);
     
-    return () => clearInterval(interval);
-  }, [currentStep, loadingSteps.length]);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [currentStep, loadingSteps.length, isVisible]);
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -107,6 +133,6 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default LoadingScreen;

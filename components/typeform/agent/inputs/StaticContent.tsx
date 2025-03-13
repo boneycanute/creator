@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { Bot, Sparkles, Check } from "lucide-react";
@@ -12,7 +12,7 @@ interface StaticContentProps {
   isCompletion?: boolean;
 }
 
-export const StaticContent: React.FC<StaticContentProps> = ({
+export const StaticContent: React.FC<StaticContentProps> = React.memo(({
   questionId,
   isWelcome = false,
   isCompletion = false,
@@ -22,11 +22,22 @@ export const StaticContent: React.FC<StaticContentProps> = ({
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
-    setMounted(true);
+    let isMounted = true;
+    
+    // Use requestAnimationFrame for smoother mounting
+    requestAnimationFrame(() => {
+      if (isMounted) {
+        setMounted(true);
+      }
+    });
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Get a summary of all responses for the completion screen
-  const getSummary = () => {
+  const getSummary = useCallback(() => {
     const responses = getAllResponses();
     const summary = {
       agentName: "",
@@ -65,9 +76,10 @@ export const StaticContent: React.FC<StaticContentProps> = ({
     });
     
     return summary;
-  };
+  }, [getAllResponses]);
 
-  const summary = isCompletion ? getSummary() : null;
+  // Memoize the summary to prevent recalculation on each render
+  const summary = useMemo(() => isCompletion ? getSummary() : null, [isCompletion, getSummary]);
 
   if (!mounted) {
     return <div className="h-64"></div>; // Placeholder during SSR
@@ -81,14 +93,6 @@ export const StaticContent: React.FC<StaticContentProps> = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >      
-        <motion.div 
-          className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-8"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-        >
-          <Bot className="w-10 h-10 text-white" />
-        </motion.div>
         
         <motion.h1
           className="text-4xl font-bold mb-4 text-black dark:text-white"
@@ -96,7 +100,7 @@ export const StaticContent: React.FC<StaticContentProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          Create Your AI Assistant
+          Build That Idea Wizard
         </motion.h1>
     
         <motion.p
@@ -235,6 +239,6 @@ export const StaticContent: React.FC<StaticContentProps> = ({
       </p>
     </div>
   );
-};
+});
 
 export default StaticContent;

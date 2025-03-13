@@ -37,12 +37,8 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
-
-  // Prevent hydration errors by only rendering after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Handle keyboard navigation - simplified to fix issues
   const handleKeyDown = useCallback(
@@ -90,7 +86,27 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     [goToNextQuestion, goToPreviousQuestion, questions, currentQuestionIndex, getCurrentResponse]
   );
 
-  // Add keyboard event listeners
+  // Prevent hydration errors by only rendering after mount
+  useEffect(() => {
+    // Use a single effect for all initialization
+    const initializeComponent = () => {
+      setMounted(true);
+      
+      // Add a small delay before showing animations
+      setTimeout(() => {
+        setInitialLoadComplete(true);
+      }, 500);
+    };
+    
+    // Call initialization function
+    initializeComponent();
+    
+    return () => {
+      // Cleanup function
+    };
+  }, []);
+
+  // Add keyboard event listeners in a separate effect
   useEffect(() => {
     if (!mounted) return;
     
@@ -199,6 +215,11 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     }
   };
 
+  // Memoize the input component to prevent unnecessary rerenders
+  const memoizedInputComponent = useCallback((question: AgentQuestion) => {
+    return getInputComponentForQuestion(question);
+  }, [getInputComponentForQuestion]);
+
   // Toggle between light and dark mode
   const { setTheme, theme } = useTheme();
   
@@ -211,12 +232,24 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     return null;
   }
 
+  // Show a simple blank screen during initial load to prevent flashing animations
+  if (!initialLoadComplete) {
+    return (
+      <div className="w-full h-screen bg-white dark:bg-gray-950"></div>
+    );
+  }
+
   return (
     <div 
       ref={formRef}
       className="relative w-full h-screen bg-white dark:bg-gray-950 overflow-hidden"
     >
-      <div className="absolute top-4 right-4 z-50">
+      <motion.div 
+        className="absolute top-4 right-4 z-50"
+        initial={{ opacity: 0, x: 0, y: 0 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -229,7 +262,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
             <Sun className="h-5 w-5" />
           )}
         </Button>
-      </div>
+      </motion.div>
       
       {/* Navigation Hint */}
       <AgentNavigationHint 
@@ -256,7 +289,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
                 isActive={currentQuestionIndex === index}
                 direction={index >= currentQuestionIndex ? 1 : -1}
               >
-                {getInputComponentForQuestion(question)}
+                {memoizedInputComponent(question)}
               </AgentSection>
             );
           })}

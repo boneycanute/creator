@@ -76,7 +76,12 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
         <div className="mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
             {isActive ? (
-              <Typewriter text={question.text} delay={30} />
+              // Skip typewriter for static content questions (intro page)
+              question.type === "static" ? (
+                question.text
+              ) : (
+                <Typewriter text={question.text} delay={30} />
+              )
             ) : (
               question.text
             )}
