@@ -88,58 +88,9 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-4">
         <div className="max-w-md">
-          <h2 className="text-xl md:text-2xl font-light text-center mb-12 text-gray-800">
-            Ready to <span className="text-[#ea76cb] font-normal">build that idea</span>
+          <h2 className="text-xl md:text-4xl font-light text-center mb-12 text-gray-800">
+            Ready to <span className="text-[#7287fd] font-normal">Build that Idea</span> ?
           </h2>
-          
-          <div className="flex justify-center">
-            {/* Realistic Keyboard Enter Key */}
-            <button
-              onClick={goToNextQuestion}
-              className="group relative bg-white border border-gray-300 rounded-md w-32 h-14
-                         shadow transition-all duration-150
-                         hover:shadow-md active:translate-y-[1px] active:shadow-inner
-                         focus:outline-none focus:ring-2 focus:ring-[#ea76cb] focus:ring-opacity-40"
-              aria-label="Press Enter to start"
-            >
-              {/* Top layer with gradient */}
-              <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-gray-100 rounded-md"></div>
-              
-              {/* Content layer */}
-              <div className="relative flex flex-col items-center justify-center h-full">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">enter</span>
-                  <svg 
-                    viewBox="0 0 24 24"
-                    width="18" 
-                    height="18" 
-                    fill="none"
-                    className="text-[#ea76cb]"
-                  >
-                    <path 
-                      d="M20 5H8v4H4v10h12v-4h4V5zm-4 11H6V11h10v5zm2-5h-4V7h4v4z" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                
-                {/* Subtle click instruction */}
-                <span className="text-[10px] text-gray-400 mt-1">press to start</span>
-              </div>
-              
-              {/* Key shadow effects */}
-              <div className="absolute inset-x-0 bottom-0 h-[2px] bg-[#ea76cb] opacity-0 group-hover:opacity-100 group-active:opacity-80 transition-opacity"></div>
-              
-              {/* Side highlight */}
-              <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white opacity-80"></div>
-              
-              {/* Bottom shadow */}
-              <div className="absolute inset-x-0 bottom-[-1px] h-[1px] bg-gray-400 opacity-20"></div>
-            </button>
-          </div>
         </div>
       </div>
     );
