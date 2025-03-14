@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { Bot, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CustomAuroraText } from "@/components/magicui/custom-aurora-text";
-
 interface StaticContentProps {
   questionId: string;
   isWelcome?: boolean;
@@ -88,51 +86,62 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
 
   if (isWelcome) {
     return (
-      <motion.div
-        className="flex flex-col items-center justify-center text-center max-w-xl mx-auto py-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >      
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-4"
-        >
-          <CustomAuroraText 
-            className="text-4xl md:text-8xl font-bold text-black dark:text-white"
-            colors={["#ea76cb", "#8839ef"]}
-            speed={2}
-          >
-            Build That Idea
-          </CustomAuroraText>
-        </motion.div>
-    
-        <motion.p
-          className="text-lg text-black/70 dark:text-white/70 mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          I'll be helping you to create your custom AI assistant in minutes with our guided setup
-        </motion.p>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-        >
-          <Button 
-            onClick={goToNextQuestion}
-            className="px-8 py-6 text-lg"
-            size="lg"
-          >
-            Let's Get Started <Sparkles className="ml-2 h-5 w-5" />
-          </Button>
-        </motion.div>
-      </motion.div>
+      <div className="w-full h-full flex flex-col items-center justify-center p-4">
+        <div className="max-w-md">
+          <h2 className="text-xl md:text-2xl font-light text-center mb-12 text-gray-800">
+            Ready to <span className="text-[#ea76cb] font-normal">build that idea</span>
+          </h2>
+          
+          <div className="flex justify-center">
+            {/* Realistic Keyboard Enter Key */}
+            <button
+              onClick={goToNextQuestion}
+              className="group relative bg-white border border-gray-300 rounded-md w-32 h-14
+                         shadow transition-all duration-150
+                         hover:shadow-md active:translate-y-[1px] active:shadow-inner
+                         focus:outline-none focus:ring-2 focus:ring-[#ea76cb] focus:ring-opacity-40"
+              aria-label="Press Enter to start"
+            >
+              {/* Top layer with gradient */}
+              <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-gray-100 rounded-md"></div>
+              
+              {/* Content layer */}
+              <div className="relative flex flex-col items-center justify-center h-full">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">enter</span>
+                  <svg 
+                    viewBox="0 0 24 24"
+                    width="18" 
+                    height="18" 
+                    fill="none"
+                    className="text-[#ea76cb]"
+                  >
+                    <path 
+                      d="M20 5H8v4H4v10h12v-4h4V5zm-4 11H6V11h10v5zm2-5h-4V7h4v4z" 
+                      stroke="currentColor" 
+                      strokeWidth="1.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                
+                {/* Subtle click instruction */}
+                <span className="text-[10px] text-gray-400 mt-1">press to start</span>
+              </div>
+              
+              {/* Key shadow effects */}
+              <div className="absolute inset-x-0 bottom-0 h-[2px] bg-[#ea76cb] opacity-0 group-hover:opacity-100 group-active:opacity-80 transition-opacity"></div>
+              
+              {/* Side highlight */}
+              <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white opacity-80"></div>
+              
+              {/* Bottom shadow */}
+              <div className="absolute inset-x-0 bottom-[-1px] h-[1px] bg-gray-400 opacity-20"></div>
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
