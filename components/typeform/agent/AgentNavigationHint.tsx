@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Keyboard, AlertCircle } from "lucide-react";
+import { Keyboard, AlertCircle, ArrowDown } from "lucide-react";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
@@ -57,11 +57,11 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
     if (mounted && !isMobile) {
       const timer = setTimeout(() => {
         setShowKeyboardHint(true);
-      }, 3000);
+      }, isFirstQuestion ? 2000 : 3000); // Show keyboard hint faster for intro screen
       
       return () => clearTimeout(timer);
     }
-  }, [mounted, isMobile]);
+  }, [mounted, isMobile, isFirstQuestion]);
 
   // Handle keyboard events for visual feedback
   useEffect(() => {
@@ -123,8 +123,8 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
     onNext();
   };
 
-  // Hide navigation for welcome, completion, and loading screens
-  if (isFirstQuestion || isLastQuestion || currentQuestion.type === 'loading') {
+  // Hide navigation for completion and loading screens only
+  if ((isLastQuestion && !isFirstQuestion) || currentQuestion.type === 'loading') {
     return null;
   }
 
@@ -133,6 +133,81 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
 
   if (!mounted) {
     return null; // Don't render during SSR
+  }
+
+  // Special intro screen keyboard hint
+  if (isFirstQuestion) {
+    return (
+      <motion.div
+        className="fixed bottom-12 left-0 right-0 flex justify-center items-center z-50"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        {showKeyboardHint && !isMobile && (
+          <motion.div
+            className="bg-transparent px-6 py-3 flex flex-col items-center"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div 
+              className="text-sm font-medium mb-3 text-black dark:text-white"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: 2.5, 
+                ease: "easeInOut"
+              }}
+            >
+              <span className="flex items-center">
+                Press 
+                <span className="mx-1">Enter</span> 
+                to start
+                <ArrowDown className="w-4 h-4 ml-1" />
+              </span>
+            </motion.div>
+            <div className="flex items-center">
+              <div className="relative">
+                <div 
+                  className="absolute inset-0 bg-gradient-to-b from-transparent to-[#ea76cb]" 
+                  style={{ 
+                    top: '2px',
+                    borderRadius: '6px',
+                    opacity: enterPressed ? 0 : 0.3,
+                    transition: 'opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                />
+                <kbd 
+                  className={`px-6 py-2 text-sm font-medium relative ${
+                    enterPressed 
+                      ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
+                      : "bg-white text-black dark:bg-black dark:text-white"
+                  }`}
+                  style={{
+                    borderRadius: '6px',
+                    transform: enterPressed ? 'translateY(2px)' : 'translateY(0)',
+                    transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: enterPressed 
+                      ? 'none' 
+                      : '0 2px 0 rgba(234, 118, 203, 0.5), 0 0 0 1px rgba(234, 118, 203, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(234, 118, 203, 0.3)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: '80px'
+                  }}
+                >
+                  <span className="flex items-center">
+                    <span>Enter</span>
+                  </span>
+                </kbd>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+    );
   }
 
   return (

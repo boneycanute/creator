@@ -5,11 +5,18 @@ import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 import { Bot, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MorphingText } from "@/components/magicui/morphing-text";
 interface StaticContentProps {
   questionId: string;
   isWelcome?: boolean;
   isCompletion?: boolean;
 }
+
+const texts = [
+  "Build",
+  "That",
+  "Idea",
+];
 
 export const StaticContent: React.FC<StaticContentProps> = React.memo(({
   questionId,
@@ -86,12 +93,8 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
 
   if (isWelcome) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-4">
-        <div className="max-w-md">
-          <h2 className="text-xl md:text-4xl font-light text-center mb-12 text-gray-800">
-            Ready to <span className="text-[#7287fd] font-normal">Build that Idea</span> ?
-          </h2>
-        </div>
+      <div className="w-full h-full flex flex-col items-center justify-center">
+          <MorphingText texts={texts} className="text-4xl md:text-5xl font-light text-center mb-12 text-gray-800 dark:text-white" />
       </div>
     );
   }
