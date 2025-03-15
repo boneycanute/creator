@@ -40,32 +40,30 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
-  // Handle keyboard navigation - simplified to fix issues
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      // Only process Enter and Escape keys
-      if (e.key !== "Enter" && e.key !== "Escape") {
-        return;
-      }
+  // Global keyboard navigation - works regardless of focus
+  useEffect(() => {
+    if (!mounted) return;
+    
+    // This handler will capture ALL keyboard events
+    const globalKeyHandler = (e: KeyboardEvent) => {
+      const currentQuestion = questions[currentQuestionIndex];
       
-      // Skip keyboard navigation when an input is focused
-      if (
-        document.activeElement instanceof HTMLInputElement ||
-        document.activeElement instanceof HTMLTextAreaElement ||
-        document.activeElement instanceof HTMLButtonElement ||
-        (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable)
-      ) {
-        return;
-      }
-
-      // Only handle Enter/Escape when no input is focused
+      // Handle Enter key for forward navigation
       if (e.key === "Enter" && !e.shiftKey) {
+        // Don't interfere with text inputs handling their own Enter key events
+        if (
+          (document.activeElement instanceof HTMLInputElement && e.target === document.activeElement) ||
+          (document.activeElement instanceof HTMLTextAreaElement && e.target === document.activeElement) ||
+          (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable && e.target === document.activeElement)
+        ) {
+          return; // Let the input's own handler work
+        }
+        
+        // For all other elements, handle Enter navigation
         e.preventDefault();
         
         // Check if current question is required and has a response
-        const currentQuestion = questions[currentQuestionIndex];
         const currentResponse = getCurrentResponse();
-        
         if (currentQuestion.required && 
             (!currentResponse || 
              !currentResponse.answer || 
@@ -79,12 +77,22 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
         }
         
         goToNextQuestion();
-      } else if (e.key === "Escape") {
+      }
+      
+      // Handle Escape key for backward navigation - always works
+      if (e.key === "Escape") {
+        e.preventDefault();
         goToPreviousQuestion();
       }
-    },
-    [goToNextQuestion, goToPreviousQuestion, questions, currentQuestionIndex, getCurrentResponse]
-  );
+    };
+    
+    // Use capture phase to ensure we get all events first
+    window.addEventListener("keydown", globalKeyHandler, true);
+    
+    return () => {
+      window.removeEventListener("keydown", globalKeyHandler, true);
+    };
+  }, [goToNextQuestion, goToPreviousQuestion, questions, currentQuestionIndex, getCurrentResponse, mounted]);
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
@@ -105,17 +113,6 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
       // Cleanup function
     };
   }, []);
-
-  // Add keyboard event listeners in a separate effect
-  useEffect(() => {
-    if (!mounted) return;
-    
-    window.addEventListener("keydown", handleKeyDown);
-    
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [mounted, handleKeyDown]);
 
   // Handle form submission
   const handleSubmit = async () => {
