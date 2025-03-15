@@ -28,11 +28,49 @@ export const TextInput: React.FC<TextInputProps> = ({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // Focus the input when the component mounts
+  // Focus the input when the component mounts - use multiple strategies for reliable focus
   useEffect(() => {
+    // Strategy 1: Immediate focus
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    
+    // Strategy 2: Focus with a small delay
+    const timer1 = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 50);
+    
+    // Strategy 3: Focus with a slightly longer delay as backup
+    const timer2 = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        
+        // If the input doesn't have focus by now, force focus via click simulation
+        if (document.activeElement !== inputRef.current) {
+          inputRef.current.click();
+          inputRef.current.focus();
+        }
+      }
+    }, 200);
+    
+    // Strategy 4: One final attempt after animation is definitely complete
+    const timer3 = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 500);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, []);
+  
+  // Update character count when input value changes
+  useEffect(() => {
     setCharCount(inputValue.length);
   }, [inputValue.length]);
 
@@ -135,7 +173,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           value={inputValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={placeholder ? `${placeholder} (just start typing)` : "Start typing..."}
           className={`w-full p-4 border-b-2 ${
             error ? "border-red-500" : "border-black dark:border-white"
           } bg-transparent text-black dark:text-white text-lg focus:outline-none focus:border-black dark:focus:border-white transition-all`}

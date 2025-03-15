@@ -29,11 +29,49 @@ export const ParagraphInput: React.FC<ParagraphInputProps> = ({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // Focus the textarea when the component mounts
+  // Focus the textarea when the component mounts - use multiple strategies for reliable focus
   useEffect(() => {
+    // Strategy 1: Immediate focus
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
+    
+    // Strategy 2: Focus with a small delay
+    const timer1 = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 50);
+    
+    // Strategy 3: Focus with a slightly longer delay as backup
+    const timer2 = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        
+        // If the textarea doesn't have focus by now, force focus via click simulation
+        if (document.activeElement !== textareaRef.current) {
+          textareaRef.current.click();
+          textareaRef.current.focus();
+        }
+      }
+    }, 200);
+    
+    // Strategy 4: One final attempt after animation is definitely complete
+    const timer3 = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 500);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, []);
+  
+  // Update character count when input value changes
+  useEffect(() => {
     setCharCount(inputValue.length);
   }, [inputValue.length]);
 
@@ -136,7 +174,7 @@ export const ParagraphInput: React.FC<ParagraphInputProps> = ({
           value={inputValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={placeholder ? `${placeholder} (just start typing)` : "Start typing..."}
           className={`w-full p-4 border-b-2 ${
             error ? "border-red-500" : "border-black dark:border-white"
           } bg-transparent text-black dark:text-white text-lg focus:outline-none focus:border-black dark:focus:border-white transition-all resize-none min-h-[100px]`}

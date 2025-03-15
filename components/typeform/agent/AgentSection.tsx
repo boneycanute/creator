@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { AgentQuestion } from "@/lib/agent-store";
 import { Typewriter } from "@/components/typeform/agent/Typewriter";
@@ -20,23 +20,36 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
 }) => {
   const [mounted, setMounted] = useState(false);
   const [showChildren, setShowChildren] = useState(false);
+  
+  // Ref for storing whether a section was ever active
+  // We'll use this to prevent re-triggering animations on re-renders
+  const wasActiveRef = React.useRef(false);
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Show children after typing animation completes
+  // Handle showing children and tracking active state
   useEffect(() => {
     if (isActive) {
-      const timer = setTimeout(() => {
+      wasActiveRef.current = true;
+      
+      // For text/paragraph inputs, show immediately to allow direct typing
+      if (question.type === 'text' || question.type === 'paragraph') {
         setShowChildren(true);
-      }, 1000); // Adjust timing based on your typing animation duration
-      return () => clearTimeout(timer);
+      } else {
+        // For other input types, wait for typing animation to complete
+        const timer = setTimeout(() => {
+          setShowChildren(true);
+        }, 1000); // Adjust timing based on your typing animation duration
+        return () => clearTimeout(timer);
+      }
     } else {
+      // Only reset shown state if we're navigating away
       setShowChildren(false);
     }
-  }, [isActive]);
+  }, [isActive, question.type]);
 
   // Animation variants
   const variants = {
@@ -57,6 +70,9 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   if (!mounted) {
     return <div className="h-64"></div>; // Placeholder during SSR
   }
+
+  // Determine if this is a text input section that should have focus immediately
+  const isTextInputSection = question.type === 'text' || question.type === 'paragraph';
 
   return (
     <motion.div
@@ -93,17 +109,25 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
           )}
         </div>
 
-        {/* Input Component */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ 
-            opacity: showChildren ? 1 : 0,
-            y: showChildren ? 0 : 20
-          }}
-          transition={{ duration: 0.5 }}
-        >
-          {children}
-        </motion.div>
+        {/* Input Component - Render immediately for text inputs */}
+        {(isTextInputSection && isActive) ? (
+          // For text inputs, don't animate in - show immediately
+          <div className="opacity-100">
+            {children}
+          </div>
+        ) : (
+          // For other inputs, animate in after typing completes
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ 
+              opacity: showChildren ? 1 : 0,
+              y: showChildren ? 0 : 20
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            {children}
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
