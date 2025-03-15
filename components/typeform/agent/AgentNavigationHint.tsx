@@ -226,7 +226,7 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
             <div className="flex items-center">
               <div className="relative">
                 <div 
-                  className="absolute inset-0 bg-gradient-to-b from-transparent to-[#ea76cb]" 
+                  className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-800 dark:to-gray-200" 
                   style={{ 
                     top: '2px',
                     borderRadius: '6px',
@@ -237,14 +237,16 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                 <kbd 
                   className={`px-6 py-2 text-sm font-medium relative ${
                     enterPressed || enterMouseDown
-                      ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
+                      ? "bg-black text-white dark:bg-white dark:text-black scale-95" 
                       : "bg-white text-black dark:bg-black dark:text-white"
                   }`}
                   style={{
                     borderRadius: '6px',
                     transform: enterPressed || enterMouseDown ? 'translateY(2px)' : 'translateY(0)',
                     transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: enterPressed || enterMouseDown ? 'none' : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    boxShadow: enterPressed || enterMouseDown 
+                      ? 'none' 
+                      : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                     border: '1px solid rgba(0, 0, 0, 0.1)',
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -324,14 +326,14 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                         style={{ 
                           top: '2px',
                           borderRadius: '6px',
-                          opacity: escPressed ? 0 : 0.3,
+                          opacity: escPressed || escMouseDown ? 0 : 0.3,
                           transition: 'opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1)'
                         }}
                       />
                       <kbd 
                         className={`px-6 py-2 text-sm font-medium relative ${
                           escPressed || escMouseDown
-                            ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
+                            ? "bg-black text-white dark:bg-white dark:text-black scale-95" 
                             : "bg-white text-black dark:bg-black dark:text-white"
                         }`}
                         style={{
@@ -392,14 +394,14 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                     style={{ 
                       top: '2px',
                       borderRadius: '6px',
-                      opacity: enterPressed ? 0 : 0.3,
+                      opacity: enterPressed || enterMouseDown ? 0 : 0.3,
                       transition: 'opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                   />
                   <kbd 
                     className={`px-6 py-2 text-sm font-medium relative ${
                       enterPressed || enterMouseDown
-                        ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
+                        ? "bg-black text-white dark:bg-white dark:text-black scale-95" 
                         : "bg-white text-black dark:bg-black dark:text-white"
                     }`}
                     style={{
@@ -408,8 +410,8 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                       transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
                       boxShadow: (enterPressed || enterMouseDown)
                         ? 'none' 
-                        : '0 2px 0 rgba(234, 118, 203, 0.5), 0 0 0 1px rgba(234, 118, 203, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(234, 118, 203, 0.3)',
+                        : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',

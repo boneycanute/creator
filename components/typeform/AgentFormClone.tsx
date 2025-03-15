@@ -275,6 +275,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     >
       <motion.div 
         className="absolute top-4 right-4 z-50"
+        style={{ position: 'fixed' }}
         initial={{ opacity: 0, x: 0, y: 0 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
@@ -303,25 +304,27 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
         isLastQuestion={currentQuestionIndex === questions.length - 1}
       />
       
-      <div className="flex flex-col items-center justify-center w-full h-full max-w-4xl mx-auto px-4 py-8">
-        <div className="relative w-full flex-1 flex items-center justify-center">
-          {questions.map((question, index) => {
-            const processedQuestion = {
-              ...question,
-              text: processQuestionText(question.text),
-            };
-            
-            return (
-              <AgentSection
-                key={question.id}
-                question={processedQuestion}
-                isActive={currentQuestionIndex === index}
-                direction={index >= currentQuestionIndex ? 1 : -1}
-              >
-                {memoizedInputComponent(question)}
-              </AgentSection>
-            );
-          })}
+      <div className="w-full h-full flex justify-center items-center px-4">
+        <div className="w-full max-w-2xl">
+          <div className="flex flex-col items-center justify-center w-full h-full">
+            {questions.map((question, index) => {
+              const processedQuestion = {
+                ...question,
+                text: processQuestionText(question.text),
+              };
+              
+              return (
+                <AgentSection
+                  key={question.id}
+                  question={processedQuestion}
+                  isActive={currentQuestionIndex === index}
+                  direction={index >= currentQuestionIndex ? 1 : -1}
+                >
+                  {memoizedInputComponent(question)}
+                </AgentSection>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

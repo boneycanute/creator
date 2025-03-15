@@ -81,7 +81,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   if (isWelcomeSection && isActive) {
     return (
       <div className="absolute w-full z-10">
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto px-4">
           {/* No typing animation for welcome section */}
           <div className="mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
@@ -95,7 +95,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
           </div>
 
           {/* Immediately show children without animation */}
-          <div className="opacity-100">
+          <div className="opacity-100 w-full">
             {children}
           </div>
         </div>
@@ -116,7 +116,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
         opacity: { duration: 0.2 },
       }}
     >
-      <div className="w-full max-w-2xl mx-auto">
+      <div className="w-full max-w-2xl mx-auto px-4">
         {/* Question Text with Typing Animation */}
         <div className="mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
@@ -141,12 +141,13 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
         {/* Input Component - Render immediately for text inputs */}
         {(isTextInputSection && isActive) ? (
           // For text inputs, don't animate in - show immediately
-          <div className="opacity-100">
+          <div className="opacity-100 w-full">
             {children}
           </div>
         ) : (
           // For other inputs, animate in after typing completes
           <motion.div
+            className="w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ 
               opacity: showChildren ? 1 : 0,

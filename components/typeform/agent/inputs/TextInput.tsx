@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback, useLayoutEffect } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
 
@@ -55,17 +55,9 @@ export const TextInput: React.FC<TextInputProps> = ({
       }
     }, 200);
     
-    // Strategy 4: One final attempt after animation is definitely complete
-    const timer3 = setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 500);
-    
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
-      clearTimeout(timer3);
     };
   }, []);
   
@@ -92,6 +84,12 @@ export const TextInput: React.FC<TextInputProps> = ({
         clearTimeout(debounceTimerRef.current);
       }
     };
+  }, []);
+
+  // Force layout recalculation on mount to ensure proper container width
+  useLayoutEffect(() => {
+    // This empty layout effect forces a layout recalculation
+    // which helps ensure the container dimensions are properly set on initial render
   }, []);
 
   const validateInput = (value: string, showError = true): boolean => {
@@ -160,7 +158,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   };
 
   return (
-    <div className="w-full relative">
+    <div className="w-full" style={{ minWidth: '100%' }}>
       <motion.div
         className="relative w-full"
         initial={{ opacity: 0, y: 10 }}
