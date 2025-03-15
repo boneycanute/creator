@@ -71,8 +71,37 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
     return <div className="h-64"></div>; // Placeholder during SSR
   }
 
+  // Check if this is the welcome/intro section
+  const isWelcomeSection = question.id === 'welcome';
+
   // Determine if this is a text input section that should have focus immediately
   const isTextInputSection = question.type === 'text' || question.type === 'paragraph';
+
+  // For welcome section, render without animations to ensure immediate display
+  if (isWelcomeSection && isActive) {
+    return (
+      <div className="absolute w-full z-10">
+        <div className="w-full max-w-2xl mx-auto">
+          {/* No typing animation for welcome section */}
+          <div className="mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
+              {question.text}
+            </h2>
+            {question.descriptions && question.descriptions.length > 0 && (
+              <p className="text-lg text-black/70 dark:text-white/70">
+                {question.descriptions[0]}
+              </p>
+            )}
+          </div>
+
+          {/* Immediately show children without animation */}
+          <div className="opacity-100">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div

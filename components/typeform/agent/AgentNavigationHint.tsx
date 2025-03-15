@@ -27,17 +27,78 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
   const [showKeyboardHint, setShowKeyboardHint] = useState(false);
   const [enterPressed, setEnterPressed] = useState(false);
   const [escPressed, setEscPressed] = useState(false);
+  const [enterMouseDown, setEnterMouseDown] = useState(false);
+  const [escMouseDown, setEscMouseDown] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showRequiredWarning, setShowRequiredWarning] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   
-  const { questions, getCurrentResponse } = useAgentFormStore();
+  const { questions, getCurrentResponse, resetStore } = useAgentFormStore();
   const currentQuestion = questions[currentIndex];
+
+  const handleNext = () => {
+    // Don't allow navigation for loading screens or if already navigating
+    if (currentQuestion.type === 'loading' || isNavigating) {
+      return;
+    }
+    
+    // Check if current question is required and has no response
+    const currentResponse = getCurrentResponse();
+    if (currentQuestion.required && 
+        (!currentResponse || 
+         !currentResponse.answer || 
+         (Array.isArray(currentResponse.answer) && currentResponse.answer.length === 0))) {
+      // Removed toast notification to prevent duplicates with AgentFormClone
+      // The validation toast is already shown in AgentFormClone.tsx
+      return;
+    }
+    
+    // Set navigating flag to prevent multiple rapid navigations
+    setIsNavigating(true);
+    
+    // Add a small delay to allow animation to complete
+    setTimeout(() => {
+      onNext();
+      // Reset navigating flag after a delay to prevent rapid navigation
+      setTimeout(() => setIsNavigating(false), 300);
+    }, 50);
+  };
+
+  const handlePrevious = () => {
+    // Don't allow navigation if already navigating or on first question
+    if (isNavigating || isFirstQuestion) {
+      return;
+    }
+    
+    // Set navigating flag to prevent multiple rapid navigations
+    setIsNavigating(true);
+    
+    // Add a small delay to allow animation to complete
+    setTimeout(() => {
+      onPrevious();
+      // Reset navigating flag after a delay to prevent rapid navigation
+      setTimeout(() => setIsNavigating(false), 300);
+    }, 50);
+  };
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
     setMounted(true);
+    
+    // Check for mobile devices
+    if (typeof window !== 'undefined') {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
+    }
   }, []);
+
+  // Reset store data when on intro page
+  useEffect(() => {
+    if (isFirstQuestion && mounted) {
+      resetStore();
+    }
+  }, [isFirstQuestion, mounted, resetStore]);
 
   // Check if the device is mobile
   useEffect(() => {
@@ -63,65 +124,60 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
     }
   }, [mounted, isMobile, isFirstQuestion]);
 
-  // Handle keyboard events for visual feedback
+  // Listen for global keyboard events
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Don't set state for text inputs to avoid conflicts
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable)
+      ) {
+        return;
+      }
+      
       if (e.key === "Enter" && !e.shiftKey) {
         setEnterPressed(true);
-        
-        // Check if current question is required and has no response
-        const currentResponse = getCurrentResponse();
-        if (currentQuestion.required && 
-            (!currentResponse || 
-             !currentResponse.answer || 
-             (Array.isArray(currentResponse.answer) && currentResponse.answer.length === 0))) {
-          // Removed toast notification to prevent duplicates with AgentFormClone
-          // The validation toast is already shown in AgentFormClone.tsx
-        }
       } else if (e.key === "Escape") {
         setEscPressed(true);
       }
     };
     
-    const handleKeyUp = (e: KeyboardEvent) => {
+    const handleGlobalKeyUp = (e: KeyboardEvent) => {
+      // Always reset pressed state on key up
       if (e.key === "Enter") {
         setEnterPressed(false);
       } else if (e.key === "Escape") {
         setEscPressed(false);
       }
+      
+      // Don't navigate for text inputs
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable)
+      ) {
+        return;
+      }
+      
+      if (e.key === "Enter") {
+        handleNext();
+      } else if (e.key === "Escape") {
+        handlePrevious();
+      }
     };
 
     // Only add keyboard listeners for non-loading screens
     if (currentQuestion.type !== 'loading' && mounted) {
-      window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("keyup", handleKeyUp);
+      document.addEventListener("keydown", handleGlobalKeyDown);
+      document.addEventListener("keyup", handleGlobalKeyUp);
     }
     
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+      document.removeEventListener("keyup", handleGlobalKeyUp);
     };
-  }, [isFirstQuestion, currentQuestion.type, mounted, currentQuestion.required, getCurrentResponse]);
-
-  const handleNext = () => {
-    // Don't allow navigation for loading screens
-    if (currentQuestion.type === 'loading') {
-      return;
-    }
-    
-    // Check if current question is required and has no response
-    const currentResponse = getCurrentResponse();
-    if (currentQuestion.required && 
-        (!currentResponse || 
-         !currentResponse.answer || 
-         (Array.isArray(currentResponse.answer) && currentResponse.answer.length === 0))) {
-      // Removed toast notification to prevent duplicates with AgentFormClone
-      // The validation toast is already shown in AgentFormClone.tsx
-      return;
-    }
-    
-    onNext();
-  };
+  }, [isFirstQuestion, currentQuestion.type, mounted, handleNext, handlePrevious]);
 
   // Hide navigation for completion and loading screens only
   if ((isLastQuestion && !isFirstQuestion) || currentQuestion.type === 'loading') {
@@ -174,29 +230,50 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                   style={{ 
                     top: '2px',
                     borderRadius: '6px',
-                    opacity: enterPressed ? 0 : 0.3,
+                    opacity: enterPressed || enterMouseDown ? 0 : 0.3,
                     transition: 'opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 />
                 <kbd 
                   className={`px-6 py-2 text-sm font-medium relative ${
-                    enterPressed 
+                    enterPressed || enterMouseDown
                       ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
                       : "bg-white text-black dark:bg-black dark:text-white"
                   }`}
                   style={{
                     borderRadius: '6px',
-                    transform: enterPressed ? 'translateY(2px)' : 'translateY(0)',
+                    transform: enterPressed || enterMouseDown ? 'translateY(2px)' : 'translateY(0)',
                     transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: enterPressed 
-                      ? 'none' 
-                      : '0 2px 0 rgba(234, 118, 203, 0.5), 0 0 0 1px rgba(234, 118, 203, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(234, 118, 203, 0.3)',
+                    boxShadow: enterPressed || enterMouseDown ? 'none' : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: '80px'
+                    minWidth: '60px',
+                    cursor: 'pointer'
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setEnterPressed(true);
+                      e.preventDefault();
+                    }
+                  }}
+                  onKeyUp={(e) => {
+                    if (e.key === 'Enter') {
+                      setEnterPressed(false);
+                      // Small delay to ensure visual feedback completes
+                      setTimeout(() => handleNext(), 50);
+                    }
+                  }}
+                  onMouseDown={() => setEnterMouseDown(true)}
+                  onMouseUp={() => {
+                    setEnterMouseDown(false);
+                    // Small delay to ensure visual feedback completes
+                    setTimeout(() => handleNext(), 50);
+                  }}
+                  onMouseLeave={() => setEnterMouseDown(false)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <span className="flex items-center">
                     <span>Enter</span>
@@ -252,24 +329,47 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                         }}
                       />
                       <kbd 
-                        className={`px-4 py-2 text-sm font-medium relative ${
-                          escPressed 
+                        className={`px-6 py-2 text-sm font-medium relative ${
+                          escPressed || escMouseDown
                             ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
                             : "bg-white text-black dark:bg-black dark:text-white"
                         }`}
                         style={{
                           borderRadius: '6px',
-                          transform: escPressed ? 'translateY(2px)' : 'translateY(0)',
+                          transform: (escPressed || escMouseDown) ? 'translateY(2px)' : 'translateY(0)',
                           transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
-                          boxShadow: escPressed 
+                          boxShadow: (escPressed || escMouseDown)
                             ? 'none' 
                             : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                           border: '1px solid rgba(0, 0, 0, 0.1)',
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          minWidth: '60px'
+                          minWidth: '60px',
+                          cursor: 'pointer'
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setEscPressed(true);
+                            e.preventDefault();
+                          }
+                        }}
+                        onKeyUp={(e) => {
+                          if (e.key === 'Escape') {
+                            setEscPressed(false);
+                            // Small delay to ensure visual feedback completes
+                            setTimeout(() => handlePrevious(), 50);
+                          }
+                        }}
+                        onMouseDown={() => setEscMouseDown(true)}
+                        onMouseUp={() => {
+                          setEscMouseDown(false);
+                          // Small delay to ensure visual feedback completes
+                          setTimeout(() => handlePrevious(), 50);
+                        }}
+                        onMouseLeave={() => setEscMouseDown(false)}
+                        role="button"
+                        tabIndex={0}
                       >
                         <span className="flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
@@ -297,24 +397,47 @@ export const AgentNavigationHint: React.FC<AgentNavigationHintProps> = ({
                     }}
                   />
                   <kbd 
-                    className={`px-4 py-2 text-sm font-medium relative ${
-                      enterPressed 
+                    className={`px-6 py-2 text-sm font-medium relative ${
+                      enterPressed || enterMouseDown
                         ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 scale-95" 
                         : "bg-white text-black dark:bg-black dark:text-white"
                     }`}
                     style={{
                       borderRadius: '6px',
-                      transform: enterPressed ? 'translateY(2px)' : 'translateY(0)',
+                      transform: (enterPressed || enterMouseDown) ? 'translateY(2px)' : 'translateY(0)',
                       transition: 'all 0.12s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxShadow: enterPressed 
+                      boxShadow: (enterPressed || enterMouseDown)
                         ? 'none' 
-                        : '0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                        : '0 2px 0 rgba(234, 118, 203, 0.5), 0 0 0 1px rgba(234, 118, 203, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(234, 118, 203, 0.3)',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minWidth: '60px'
+                      minWidth: '80px',
+                      cursor: 'pointer'
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setEnterPressed(true);
+                        e.preventDefault();
+                      }
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === 'Enter') {
+                        setEnterPressed(false);
+                        // Small delay to ensure visual feedback completes
+                        setTimeout(() => handleNext(), 50);
+                      }
+                    }}
+                    onMouseDown={() => setEnterMouseDown(true)}
+                    onMouseUp={() => {
+                      setEnterMouseDown(false);
+                      // Small delay to ensure visual feedback completes
+                      setTimeout(() => handleNext(), 50);
+                    }}
+                    onMouseLeave={() => setEnterMouseDown(false)}
+                    role="button"
+                    tabIndex={0}
                   >
                     <span className="flex items-center">
                       <span>Enter</span>

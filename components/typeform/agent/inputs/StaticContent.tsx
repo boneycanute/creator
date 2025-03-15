@@ -24,6 +24,7 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
   isCompletion = false,
 }) => {
   const [mounted, setMounted] = useState(false);
+  const [key, setKey] = useState(0);
   const { goToNextQuestion, getAllResponses } = useAgentFormStore();
 
   // Prevent hydration errors by only rendering after mount
@@ -41,6 +42,17 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
       isMounted = false;
     };
   }, []);
+
+  // Reset MorphingText component when it becomes visible
+  useEffect(() => {
+    if (mounted && isWelcome) {
+      // Short delay to ensure component is fully rendered
+      const timer = setTimeout(() => {
+        setKey(prev => prev + 1);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [mounted, isWelcome]);
 
   // Get a summary of all responses for the completion screen
   const getSummary = useCallback(() => {
@@ -94,7 +106,12 @@ export const StaticContent: React.FC<StaticContentProps> = React.memo(({
   if (isWelcome) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center">
-          <MorphingText texts={texts} className="text-4xl md:text-5xl font-light text-center mb-12 text-gray-800 dark:text-white" />
+        {/* Using key prop to force complete remount of component */}
+        <MorphingText 
+          key={`morphing-text-${key}`} 
+          texts={texts} 
+          className="text-4xl md:text-5xl font-light text-center mb-12 text-gray-800 dark:text-white" 
+        />
       </div>
     );
   }

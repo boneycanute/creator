@@ -42,6 +42,7 @@ export interface AgentFormState {
   getAllResponses: () => AgentFormResponse[];
   setAgentName: (name: string) => void;
   getAgentName: () => string;
+  resetStore: () => void; // New function to reset the store
 }
 
 // Create the store
@@ -272,4 +273,11 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
   setAgentName: (name) => set({ agentName: name }),
   
   getAgentName: () => get().agentName,
+  
+  // Reset the store to its initial state
+  resetStore: () => set({
+    currentQuestionIndex: 0,
+    responses: [],
+    agentName: "",
+  }),
 }));
