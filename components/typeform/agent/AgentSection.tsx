@@ -118,7 +118,9 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
       }}
     >
       <div
-        className={`w-full mx-auto px-4 ${useWideContainer ? "" : "max-w-2xl"}`}
+        className={`w-full mx-auto px-4 ${
+          useWideContainer ? "max-w-11/12" : "max-w-2xl"
+        }`}
       >
         {/* Question Text with Typing Animation */}
         <div className="mb-8">
