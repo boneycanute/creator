@@ -309,7 +309,8 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
       />
 
       <div className="w-full h-full flex justify-center items-center px-4">
-        <div className="w-full max-w-2xl">
+        {/* <div className="w-full max-w-2xl"> */}
+        <div className="w-full">
           <div className="flex flex-col items-center justify-center w-full h-full">
             {questions.map((question, index) => {
               const processedQuestion = {
@@ -323,6 +324,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
                   question={processedQuestion}
                   isActive={currentQuestionIndex === index}
                   direction={index >= currentQuestionIndex ? 1 : -1}
+                  useWideContainer={question.type === "keyboardMultipleChoice"}
                 >
                   {memoizedInputComponent(question)}
                 </AgentSection>
