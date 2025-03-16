@@ -34,6 +34,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
 
   // Handle showing children and tracking active state
   useEffect(() => {
+    console.log("Wide container : ", useWideContainer);
     if (isActive) {
       wasActiveRef.current = true;
 
