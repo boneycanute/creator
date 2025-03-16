@@ -70,7 +70,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   };
 
   if (!mounted) {
-    return <div className="h-64"></div>; // Placeholder during SSR
+    return <div className="h-64">Loading...</div>; // Placeholder during SSR
   }
 
   // Check if this is the welcome/intro section
@@ -84,7 +84,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   if (isWelcomeSection && isActive) {
     return (
       <div className="absolute w-full h-full z-10">
-        <div className="w-full mx-auto px-4">
+        <div className="w-full mx-auto px-4 h-full">
           {/* No typing animation for welcome section */}
           <div className="mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
@@ -98,7 +98,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
           </div>
 
           {/* Immediately show children without animation */}
-          <div className="opacity-100 w-full">{children}</div>
+          <div className="opacity-100 w-full h-full">{children}</div>
         </div>
       </div>
     );
