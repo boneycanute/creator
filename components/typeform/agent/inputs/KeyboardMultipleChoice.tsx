@@ -14,12 +14,7 @@ interface KeyboardMultipleChoiceInputProps {
 
 export const KeyboardMultipleChoiceInput: React.FC<
   KeyboardMultipleChoiceInputProps
-> = ({
-  questionId,
-  title = "Select an option",
-  options,
-  descriptions = [],
-}) => {
+> = ({ questionId, options, descriptions = [] }) => {
   // If useAgentFormStore is not available during testing, use local state
   const agentStore =
     typeof useAgentFormStore === "function" ? useAgentFormStore() : null;
@@ -78,12 +73,37 @@ export const KeyboardMultipleChoiceInput: React.FC<
     Math.min(options.length, keyboardKeys.length)
   );
 
-  // Console log for debugging
-  console.log("Rendering KeyboardMultipleChoiceInput:", {
-    questionId,
-    options: visibleOptions,
-    selectedOption,
-  });
+  // Add keyboard event listeners for letter keys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only process if not in an input element
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        (document.activeElement instanceof HTMLElement &&
+          document.activeElement.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Get the pressed key and convert to uppercase
+      const key = e.key.toUpperCase();
+
+      // Check if the key is one of our option keys
+      const keyIndex = keyboardKeys.indexOf(key);
+      if (keyIndex >= 0 && keyIndex < visibleOptions.length) {
+        // Select the corresponding option
+        handleSelect(visibleOptions[keyIndex]);
+        e.preventDefault();
+      }
+    };
+
+    // Add and remove the event listener
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [visibleOptions, keyboardKeys, handleSelect]);
 
   return (
     <div className="flex flex-col w-full h-full">
@@ -120,7 +140,7 @@ export const KeyboardMultipleChoiceInput: React.FC<
         </motion.div>
 
         <motion.div
-          className="w-full  rounded-lg p-6 h-full min-h-[400px] flex flex-col border-2 border-black dark:border-white"
+          className="w-full rounded-lg p-6 h-full min-h-[400px] flex flex-col border-2 border-black dark:border-white"
           initial={{ opacity: 0 }}
           animate={{ opacity: selectedDescription ? 1 : 0.9 }}
         >

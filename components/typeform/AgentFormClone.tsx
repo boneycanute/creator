@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useCallback, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAgentFormStore, AgentQuestion } from "@/lib/agent-store";
 import { AgentSection } from "@/components/typeform/agent/AgentSection";
 import { TextInput } from "@/components/typeform/agent/inputs/TextInput";
@@ -12,8 +11,6 @@ import { FileUploadInput } from "@/components/typeform/agent/inputs/FileUploadIn
 import { StaticContent } from "@/components/typeform/agent/inputs/StaticContent";
 import { LoadingScreen } from "@/components/typeform/agent/inputs/LoadingScreen";
 import { AgentNavigationHint } from "@/components/typeform/agent/AgentNavigationHint";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/theme-provider";
 
 import { toast } from "sonner";
 import { KeyboardMultipleChoiceInput } from "./agent/inputs/KeyboardMultipleChoice";
@@ -37,123 +34,13 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
-
-  // Global keyboard navigation - works regardless of focus
-  useEffect(() => {
-    if (!mounted) return;
-
-    // Track key presses for visual feedback
-    const keyDownHandler = (e: KeyboardEvent) => {
-      // Don't interfere with text inputs handling their own Enter key events
-      if (
-        (document.activeElement instanceof HTMLInputElement &&
-          e.target === document.activeElement) ||
-        (document.activeElement instanceof HTMLTextAreaElement &&
-          e.target === document.activeElement) ||
-        (document.activeElement instanceof HTMLElement &&
-          document.activeElement.isContentEditable &&
-          e.target === document.activeElement)
-      ) {
-        return; // Let the input's own handler work
-      }
-
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault(); // Prevent default Enter behavior
-      } else if (e.key === "Escape") {
-        e.preventDefault(); // Prevent default Escape behavior
-      }
-    };
-
-    // Handle navigation on key release only
-    const keyUpHandler = (e: KeyboardEvent) => {
-      // Skip if we're already navigating
-      if (isNavigating) return;
-
-      const currentQuestion = questions[currentQuestionIndex];
-
-      // Handle Enter key for forward navigation
-      if (e.key === "Enter" && !e.shiftKey) {
-        // Don't interfere with text inputs handling their own Enter key events
-        if (
-          (document.activeElement instanceof HTMLInputElement &&
-            e.target === document.activeElement) ||
-          (document.activeElement instanceof HTMLTextAreaElement &&
-            e.target === document.activeElement) ||
-          (document.activeElement instanceof HTMLElement &&
-            document.activeElement.isContentEditable &&
-            e.target === document.activeElement)
-        ) {
-          return; // Let the input's own handler work
-        }
-
-        // Check if current question is required and has a response
-        const currentResponse = getCurrentResponse();
-        if (
-          currentQuestion.required &&
-          (!currentResponse ||
-            !currentResponse.answer ||
-            (Array.isArray(currentResponse.answer) &&
-              currentResponse.answer.length === 0))
-        ) {
-          // Don't proceed if required field is empty
-          toast.error("This field is required", {
-            position: "top-center",
-            duration: 3000,
-          });
-          return;
-        }
-
-        // Set navigating flag to prevent multiple rapid navigations
-        setIsNavigating(true);
-
-        // Add a small delay to allow animation to complete
-        setTimeout(() => {
-          goToNextQuestion();
-          // Reset navigating flag after a delay
-          setTimeout(() => setIsNavigating(false), 300);
-        }, 50);
-      }
-
-      // Handle Escape key for backward navigation - always works
-      else if (e.key === "Escape") {
-        // Set navigating flag to prevent multiple rapid navigations
-        setIsNavigating(true);
-
-        // Add a small delay to allow animation to complete
-        setTimeout(() => {
-          goToPreviousQuestion();
-          // Reset navigating flag after a delay
-          setTimeout(() => setIsNavigating(false), 300);
-        }, 50);
-      }
-    };
-
-    // Use document level event listeners to ensure they work without focus
-    document.addEventListener("keydown", keyDownHandler);
-    document.addEventListener("keyup", keyUpHandler);
-
-    return () => {
-      document.removeEventListener("keydown", keyDownHandler);
-      document.removeEventListener("keyup", keyUpHandler);
-    };
-  }, [
-    goToNextQuestion,
-    goToPreviousQuestion,
-    questions,
-    currentQuestionIndex,
-    getCurrentResponse,
-    mounted,
-    isNavigating,
-  ]);
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
     // Use a single effect for all initialization
     const initializeComponent = () => {
       setMounted(true);
-      setIsNavigating(false); // Ensure navigation state is reset on mount
 
       // Delay setting initialLoadComplete to allow for animations
       setTimeout(() => {
@@ -267,7 +154,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
             questionId={question.id}
             title={question.text}
             options={question.options || []}
-            descriptions={[]}
+            descriptions={question.descriptions || []}
           />
         );
       default:
@@ -298,7 +185,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
       ref={formRef}
       className="relative w-full h-screen bg-white dark:bg-gray-950 overflow-hidden"
     >
-      {/* Navigation Hint */}
+      {/* Navigation Hint - Now the single source of truth for keyboard navigation */}
       <AgentNavigationHint
         currentIndex={currentQuestionIndex}
         totalQuestions={questions.length}

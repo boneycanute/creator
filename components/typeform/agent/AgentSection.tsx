@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { AgentQuestion } from "@/lib/agent-store";
 import { Typewriter } from "@/components/typeform/agent/Typewriter";
@@ -24,8 +24,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   const [showChildren, setShowChildren] = useState(false);
 
   // Ref for storing whether a section was ever active
-  // We'll use this to prevent re-triggering animations on re-renders
-  const wasActiveRef = React.useRef(false);
+  const wasActiveRef = useRef(false);
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
@@ -34,7 +33,6 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
 
   // Handle showing children and tracking active state
   useEffect(() => {
-    console.log("Wide container : ", useWideContainer);
     if (isActive) {
       wasActiveRef.current = true;
 
@@ -54,7 +52,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
     }
   }, [isActive, question.type]);
 
-  // Animation variants
+  // Animation variants - horizontal movement only
   const variants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 1000 : -1000,
@@ -81,11 +79,24 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   const isTextInputSection =
     question.type === "text" || question.type === "paragraph";
 
+  // Fixed styles for consistent positioning
+  const outerContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+    width: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
+  };
+
   // For welcome section, render without animations to ensure immediate display
   if (isWelcomeSection && isActive) {
     return (
-      <div className="absolute w-full h-full z-10">
-        <div className="w-full mx-auto px-4 h-full">
+      <div className="absolute w-full h-full z-10" style={outerContainerStyle}>
+        <div className={`w-full px-4 max-w-2xl`}>
           {/* No typing animation for welcome section */}
           <div className="mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black dark:text-white">
@@ -99,7 +110,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
           </div>
 
           {/* Immediately show children without animation */}
-          <div className="opacity-100 w-full h-full">{children}</div>
+          <div className="opacity-100 w-full">{children}</div>
         </div>
       </div>
     );
@@ -107,7 +118,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
 
   return (
     <motion.div
-      className={`absolute w-full ${isActive ? "z-10" : "z-0"}`}
+      className={`absolute w-full h-full ${isActive ? "z-10" : "z-0"}`}
       custom={direction}
       variants={variants}
       initial="enter"
@@ -117,9 +128,10 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
         x: { type: "spring", stiffness: 300, damping: 30 },
         opacity: { duration: 0.2 },
       }}
+      style={outerContainerStyle}
     >
       <div
-        className={`w-full h-full mx-auto px-4 ${
+        className={`w-full px-4 ${
           useWideContainer ? "max-w-11/12" : "max-w-2xl"
         }`}
       >
