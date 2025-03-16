@@ -14,16 +14,15 @@ import { LoadingScreen } from "@/components/typeform/agent/inputs/LoadingScreen"
 import { AgentNavigationHint } from "@/components/typeform/agent/AgentNavigationHint";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Moon, Sun } from "lucide-react";
+
 import { toast } from "sonner";
+import { KeyboardMultipleChoiceInput } from "./agent/inputs/KeyboardMultipleChoice";
 
 interface AgentFormCloneProps {
   onSubmit?: (responses: any) => void;
 }
 
-export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
-  onSubmit,
-}) => {
+export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
   const {
     questions,
     currentQuestionIndex,
@@ -44,49 +43,60 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
   // Global keyboard navigation - works regardless of focus
   useEffect(() => {
     if (!mounted) return;
-    
+
     // Track key presses for visual feedback
     const keyDownHandler = (e: KeyboardEvent) => {
       // Don't interfere with text inputs handling their own Enter key events
       if (
-        (document.activeElement instanceof HTMLInputElement && e.target === document.activeElement) ||
-        (document.activeElement instanceof HTMLTextAreaElement && e.target === document.activeElement) ||
-        (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable && e.target === document.activeElement)
+        (document.activeElement instanceof HTMLInputElement &&
+          e.target === document.activeElement) ||
+        (document.activeElement instanceof HTMLTextAreaElement &&
+          e.target === document.activeElement) ||
+        (document.activeElement instanceof HTMLElement &&
+          document.activeElement.isContentEditable &&
+          e.target === document.activeElement)
       ) {
         return; // Let the input's own handler work
       }
-      
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault(); // Prevent default Enter behavior
       } else if (e.key === "Escape") {
         e.preventDefault(); // Prevent default Escape behavior
       }
     };
-    
+
     // Handle navigation on key release only
     const keyUpHandler = (e: KeyboardEvent) => {
       // Skip if we're already navigating
       if (isNavigating) return;
-      
+
       const currentQuestion = questions[currentQuestionIndex];
-      
+
       // Handle Enter key for forward navigation
       if (e.key === "Enter" && !e.shiftKey) {
         // Don't interfere with text inputs handling their own Enter key events
         if (
-          (document.activeElement instanceof HTMLInputElement && e.target === document.activeElement) ||
-          (document.activeElement instanceof HTMLTextAreaElement && e.target === document.activeElement) ||
-          (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable && e.target === document.activeElement)
+          (document.activeElement instanceof HTMLInputElement &&
+            e.target === document.activeElement) ||
+          (document.activeElement instanceof HTMLTextAreaElement &&
+            e.target === document.activeElement) ||
+          (document.activeElement instanceof HTMLElement &&
+            document.activeElement.isContentEditable &&
+            e.target === document.activeElement)
         ) {
           return; // Let the input's own handler work
         }
-        
+
         // Check if current question is required and has a response
         const currentResponse = getCurrentResponse();
-        if (currentQuestion.required && 
-            (!currentResponse || 
-             !currentResponse.answer || 
-             (Array.isArray(currentResponse.answer) && currentResponse.answer.length === 0))) {
+        if (
+          currentQuestion.required &&
+          (!currentResponse ||
+            !currentResponse.answer ||
+            (Array.isArray(currentResponse.answer) &&
+              currentResponse.answer.length === 0))
+        ) {
           // Don't proceed if required field is empty
           toast.error("This field is required", {
             position: "top-center",
@@ -94,10 +104,10 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
           });
           return;
         }
-        
+
         // Set navigating flag to prevent multiple rapid navigations
         setIsNavigating(true);
-        
+
         // Add a small delay to allow animation to complete
         setTimeout(() => {
           goToNextQuestion();
@@ -105,12 +115,12 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
           setTimeout(() => setIsNavigating(false), 300);
         }, 50);
       }
-      
+
       // Handle Escape key for backward navigation - always works
       else if (e.key === "Escape") {
         // Set navigating flag to prevent multiple rapid navigations
         setIsNavigating(true);
-        
+
         // Add a small delay to allow animation to complete
         setTimeout(() => {
           goToPreviousQuestion();
@@ -119,16 +129,24 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
         }, 50);
       }
     };
-    
+
     // Use document level event listeners to ensure they work without focus
     document.addEventListener("keydown", keyDownHandler);
     document.addEventListener("keyup", keyUpHandler);
-    
+
     return () => {
       document.removeEventListener("keydown", keyDownHandler);
       document.removeEventListener("keyup", keyUpHandler);
     };
-  }, [goToNextQuestion, goToPreviousQuestion, questions, currentQuestionIndex, getCurrentResponse, mounted, isNavigating]);
+  }, [
+    goToNextQuestion,
+    goToPreviousQuestion,
+    questions,
+    currentQuestionIndex,
+    getCurrentResponse,
+    mounted,
+    isNavigating,
+  ]);
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
@@ -136,34 +154,36 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
     const initializeComponent = () => {
       setMounted(true);
       setIsNavigating(false); // Ensure navigation state is reset on mount
-      
+
       // Delay setting initialLoadComplete to allow for animations
       setTimeout(() => {
         setInitialLoadComplete(true);
       }, 500);
     };
-    
+
     initializeComponent();
   }, []);
 
   // Handle form submission
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       const responses = getAllResponses();
       if (onSubmit) {
         onSubmit(responses);
       }
-      
+
       // Navigate to the completion screen
-      const completionIndex = questions.findIndex(q => q.id === 'completion');
+      const completionIndex = questions.findIndex((q) => q.id === "completion");
       if (completionIndex !== -1) {
         setCurrentQuestionIndex(completionIndex);
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error("There was an error submitting your responses. Please try again.");
+      console.error("Error submitting form:", error);
+      toast.error(
+        "There was an error submitting your responses. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -208,7 +228,13 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
             questionId={question.id}
             options={question.options || []}
             descriptions={question.descriptions || []}
-            layout={question.id === "promptStyle" ? "split" : question.id === "pricingPlan" ? "cards" : "default"}
+            layout={
+              question.id === "promptStyle"
+                ? "split"
+                : question.id === "pricingPlan"
+                ? "cards"
+                : "default"
+            }
           />
         );
       case "colorSelection":
@@ -234,9 +260,14 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
           />
         );
       case "loading":
+        return <LoadingScreen questionId={question.id} />;
+      case "keyboardMultipleChoice":
         return (
-          <LoadingScreen
+          <KeyboardMultipleChoiceInput
             questionId={question.id}
+            title={question.text}
+            options={question.options || []}
+            descriptions={[]}
           />
         );
       default:
@@ -245,16 +276,12 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
   };
 
   // Memoize the input component to prevent unnecessary rerenders
-  const memoizedInputComponent = useCallback((question: AgentQuestion) => {
-    return getInputComponentForQuestion(question);
-  }, [getInputComponentForQuestion]);
-
-  // Toggle between light and dark mode
-  const { setTheme, theme } = useTheme();
-  
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
+  const memoizedInputComponent = useCallback(
+    (question: AgentQuestion) => {
+      return getInputComponentForQuestion(question);
+    },
+    [getInputComponentForQuestion]
+  );
 
   // Don't render anything during SSR to prevent hydration errors
   if (!mounted) {
@@ -263,47 +290,24 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
 
   // Show a simple blank screen during initial load to prevent flashing animations
   if (!initialLoadComplete) {
-    return (
-      <div className="w-full h-screen bg-white dark:bg-gray-950"></div>
-    );
+    return <div className="w-full h-screen bg-white dark:bg-gray-950"></div>;
   }
 
   return (
-    <div 
+    <div
       ref={formRef}
       className="relative w-full h-screen bg-white dark:bg-gray-950 overflow-hidden"
     >
-      <motion.div 
-        className="absolute top-4 right-4 z-50"
-        style={{ position: 'fixed' }}
-        initial={{ opacity: 0, x: 0, y: 0 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          className="rounded-full w-10 h-10"
-        >
-          {theme === "light" ? (
-            <Moon className="h-5 w-5" />
-          ) : (
-            <Sun className="h-5 w-5" />
-          )}
-        </Button>
-      </motion.div>
-      
       {/* Navigation Hint */}
-      <AgentNavigationHint 
-        currentIndex={currentQuestionIndex} 
+      <AgentNavigationHint
+        currentIndex={currentQuestionIndex}
         totalQuestions={questions.length}
         onNext={goToNextQuestion}
         onPrevious={goToPreviousQuestion}
         isFirstQuestion={currentQuestionIndex === 0}
         isLastQuestion={currentQuestionIndex === questions.length - 1}
       />
-      
+
       <div className="w-full h-full flex justify-center items-center px-4">
         <div className="w-full max-w-2xl">
           <div className="flex flex-col items-center justify-center w-full h-full">
@@ -312,7 +316,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({
                 ...question,
                 text: processQuestionText(question.text),
               };
-              
+
               return (
                 <AgentSection
                   key={question.id}

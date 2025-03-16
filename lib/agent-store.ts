@@ -1,7 +1,15 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 // Define the types for our questions and responses
-export type AgentQuestionType = 'text' | 'paragraph' | 'multipleChoice' | 'colorSelection' | 'fileUpload' | 'static' | 'loading';
+export type AgentQuestionType =
+  | "text"
+  | "paragraph"
+  | "multipleChoice"
+  | "keyboardMultipleChoice"
+  | "colorSelection"
+  | "fileUpload"
+  | "static"
+  | "loading";
 
 export interface AgentQuestion {
   id: string;
@@ -10,6 +18,24 @@ export interface AgentQuestion {
   required?: boolean;
   options?: string[]; // For multiple choice questions
   descriptions?: string[]; // For descriptions of options
+  placeholder?: string;
+  validation?: {
+    required?: boolean;
+    minLength?: number;
+    maxLength?: number;
+  };
+  conditionalNext?: {
+    // If the answer matches a key, go to the specified question ID
+    [key: string]: string;
+  };
+}
+
+export interface keyboardMultipleChoice {
+  id: string;
+  text: string;
+  type: keyboardMultipleChoice;
+  required?: boolean;
+  options?: string[]; // For multiple choice questions
   placeholder?: string;
   validation?: {
     required?: boolean;
@@ -32,7 +58,7 @@ export interface AgentFormState {
   currentQuestionIndex: number;
   responses: AgentFormResponse[];
   agentName: string;
-  
+
   // Actions
   setCurrentQuestionIndex: (index: number) => void;
   goToNextQuestion: () => void;
@@ -51,16 +77,16 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
   questions: [
     // Section 1: Welcome
     {
-      id: 'welcome',
+      id: "welcome",
       text: "",
-      type: 'static',
+      type: "static",
       required: false,
     },
     // Section 2: Agent Name
     {
-      id: 'agentName',
+      id: "agentName",
       text: "What's the name of your AI agent?",
-      type: 'text',
+      type: "text",
       required: true,
       placeholder: "E.g., AssistBot, MarketingGPT, CodeHelper...",
       validation: {
@@ -70,11 +96,12 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     },
     // Section 3: Agent Purpose
     {
-      id: 'agentPurpose',
+      id: "agentPurpose",
       text: "Great! What would you like [agentName] to specifically do?",
-      type: 'paragraph',
+      type: "paragraph",
       required: true,
-      placeholder: "E.g., Help me analyze marketing data, assist with coding problems, generate creative content...",
+      placeholder:
+        "E.g., Help me analyze marketing data, assist with coding problems, generate creative content...",
       validation: {
         required: true,
         minLength: 10,
@@ -82,20 +109,21 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     },
     // Section 4: Target Users
     {
-      id: 'targetUsers',
+      id: "targetUsers",
       text: "Who will be using [agentName]?",
-      type: 'paragraph',
+      type: "paragraph",
       required: true,
-      placeholder: "E.g., Self, Marketing professionals, software developers, content writers, students...",
+      placeholder:
+        "E.g., Self, Marketing professionals, software developers, content writers, students...",
       validation: {
         required: true,
       },
     },
     // Section 5: System Prompt Style
     {
-      id: 'promptStyle',
+      id: "promptStyle",
       text: "Select a conversational style for [agentName]:",
-      type: 'multipleChoice',
+      type: "keyboardMultipleChoice",
       required: true,
       options: [
         "Professional & Formal",
@@ -104,19 +132,19 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
         "Creative & Inspiring",
         "Concise & Direct",
       ],
-      descriptions: [
+      options_descriptions: [
         "Maintains a business-like tone with proper language and formality",
         "Conversational and approachable, using casual language and friendly expressions",
         "Focuses on accuracy and detail with domain-specific terminology",
         "Uses expressive language with metaphors and imaginative descriptions",
-        "Provides straightforward answers without unnecessary elaboration"
+        "Provides straightforward answers without unnecessary elaboration",
       ],
     },
     // Section 6: Agent Customization - User Message Color
     {
-      id: 'userMessageColor',
+      id: "userMessageColor",
       text: "Customize the appearance of your conversation with [agentName]:",
-      type: 'colorSelection',
+      type: "colorSelection",
       required: true,
       options: [
         "#1a1a1a", // Dark black
@@ -129,9 +157,9 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     },
     // Section 7: Agent Customization - AI Message Color
     {
-      id: 'aiMessageColor',
+      id: "aiMessageColor",
       text: "Now select the color for [agentName]'s messages:",
-      type: 'colorSelection',
+      type: "colorSelection",
       required: true,
       options: [
         "#1a1a1a", // Dark black
@@ -144,16 +172,11 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     },
     // Section 8: Pricing Plan
     {
-      id: 'pricingPlan',
+      id: "pricingPlan",
       text: "Select a pricing plan for [agentName]:",
-      type: 'multipleChoice',
+      type: "multipleChoice",
       required: true,
-      options: [
-        "Free Tier",
-        "Standard",
-        "Professional",
-        "Enterprise",
-      ],
+      options: ["Free Tier", "Standard", "Professional", "Enterprise"],
       descriptions: [
         "Basic capabilities, 100 messages/month",
         "$9.99/month, Enhanced capabilities, 1,000 messages/month",
@@ -163,9 +186,9 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     },
     // Section 9: Knowledge Base
     {
-      id: 'knowledgeBase',
+      id: "knowledgeBase",
       text: "Would you like to enhance [agentName] with custom knowledge?",
-      type: 'multipleChoice',
+      type: "multipleChoice",
       required: true,
       options: [
         "No, use standard knowledge only",
@@ -178,24 +201,24 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     },
     // Section 9b: File Upload (conditional)
     {
-      id: 'fileUpload',
+      id: "fileUpload",
       text: "Upload documents to enhance [agentName]'s knowledge base:",
-      type: 'fileUpload',
+      type: "fileUpload",
       required: false,
       placeholder: "Upload PDF, DOCX, or TXT files",
     },
     // Section 10: Creation Process
     {
-      id: 'creationProcess',
+      id: "creationProcess",
       text: "Creating your AI agent...",
-      type: 'loading',
+      type: "loading",
       required: false,
     },
     // Section 11: Completion
     {
-      id: 'completion',
+      id: "completion",
       text: "[agentName] is ready!",
-      type: 'static',
+      type: "static",
       required: false,
     },
   ],
@@ -204,53 +227,61 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
   agentName: "",
 
   // Actions
-  setCurrentQuestionIndex: (index) => 
-    set((state) => ({ 
-      currentQuestionIndex: Math.max(0, Math.min(index, state.questions.length - 1)) 
+  setCurrentQuestionIndex: (index) =>
+    set((state) => ({
+      currentQuestionIndex: Math.max(
+        0,
+        Math.min(index, state.questions.length - 1)
+      ),
     })),
-    
-  goToNextQuestion: () => 
+
+  goToNextQuestion: () =>
     set((state) => {
       const currentQuestion = state.questions[state.currentQuestionIndex];
       const currentResponse = state.responses.find(
         (response) => response.questionId === currentQuestion.id
       );
-      
+
       // Check for conditional navigation
       if (currentQuestion.conditionalNext && currentResponse) {
         const answer = currentResponse.answer as string;
         const nextQuestionId = currentQuestion.conditionalNext[answer];
-        
+
         if (nextQuestionId) {
-          const nextIndex = state.questions.findIndex(q => q.id === nextQuestionId);
+          const nextIndex = state.questions.findIndex(
+            (q) => q.id === nextQuestionId
+          );
           if (nextIndex !== -1) {
             return { currentQuestionIndex: nextIndex };
           }
         }
       }
-      
+
       // Default to next question
       return {
-        currentQuestionIndex: Math.min(state.currentQuestionIndex + 1, state.questions.length - 1)
+        currentQuestionIndex: Math.min(
+          state.currentQuestionIndex + 1,
+          state.questions.length - 1
+        ),
       };
     }),
-    
-  goToPreviousQuestion: () => 
+
+  goToPreviousQuestion: () =>
     set((state) => ({
-      currentQuestionIndex: Math.max(0, state.currentQuestionIndex - 1)
+      currentQuestionIndex: Math.max(0, state.currentQuestionIndex - 1),
     })),
-    
-  setResponse: (questionId, answer) => 
+
+  setResponse: (questionId, answer) =>
     set((state) => {
       const existingResponseIndex = state.responses.findIndex(
         (response) => response.questionId === questionId
       );
-      
+
       // If this is the agent name question, update the agent name
-      if (questionId === 'agentName' && typeof answer === 'string') {
+      if (questionId === "agentName" && typeof answer === "string") {
         state.agentName = answer;
       }
-      
+
       if (existingResponseIndex !== -1) {
         // Update existing response
         const updatedResponses = [...state.responses];
@@ -261,23 +292,26 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
         return { responses: [...state.responses, { questionId, answer }] };
       }
     }),
-    
+
   getCurrentResponse: () => {
     const { questions, currentQuestionIndex, responses } = get();
     const currentQuestion = questions[currentQuestionIndex];
-    return responses.find((response) => response.questionId === currentQuestion.id);
+    return responses.find(
+      (response) => response.questionId === currentQuestion.id
+    );
   },
-  
+
   getAllResponses: () => get().responses,
-  
+
   setAgentName: (name) => set({ agentName: name }),
-  
+
   getAgentName: () => get().agentName,
-  
+
   // Reset the store to its initial state
-  resetStore: () => set({
-    currentQuestionIndex: 0,
-    responses: [],
-    agentName: "",
-  }),
+  resetStore: () =>
+    set({
+      currentQuestionIndex: 0,
+      responses: [],
+      agentName: "",
+    }),
 }));
