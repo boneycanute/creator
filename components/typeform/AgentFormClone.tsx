@@ -175,6 +175,7 @@ export const AgentFormClone: React.FC<AgentFormCloneProps> = ({ onSubmit }) => {
     return null;
   }
 
+
   // Show a simple blank screen during initial load to prevent flashing animations
   if (!initialLoadComplete) {
     return <div className="w-full h-screen bg-white dark:bg-gray-950"></div>;

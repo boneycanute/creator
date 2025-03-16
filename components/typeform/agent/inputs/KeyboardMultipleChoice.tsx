@@ -14,39 +14,79 @@ interface KeyboardMultipleChoiceInputProps {
 
 export const KeyboardMultipleChoiceInput: React.FC<
   KeyboardMultipleChoiceInputProps
-> = ({ questionId, options, descriptions = [] }) => {
-  // If useAgentFormStore is not available during testing, use local state
-  const agentStore =
-    typeof useAgentFormStore === "function" ? useAgentFormStore() : null;
-  const [localSelectedOption, setLocalSelectedOption] = useState<string>("");
+> = ({ questionId, options: defaultOptions, descriptions = [] }) => {
+  // Replace with the framework options
+  const options = [
+    "CARE Framework",
+    "APE Framework",
+    "CREATE Framework",
+    "RACE Framework",
+    "SPEAR Framework",
+    "RPG Framework"
+  ];
 
   // Use either store or local state depending on what's available
+  const agentStore = useAgentFormStore();
+  const [localSelectedOption, setLocalSelectedOption] = useState<string>("");
   const selectedOption = agentStore
     ? (agentStore.getCurrentResponse()?.answer as string) || ""
     : localSelectedOption;
 
-  const [selectedDescription, setSelectedDescription] = useState<string>("");
-
+  const [generatedContent, setGeneratedContent] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  
   // Handle option selection
-  const handleSelect = (option: string) => {
+  const handleSelect = async (option: string) => {
+    // Update the selection in store
     if (agentStore) {
       agentStore.setResponse(questionId, option);
     } else {
       setLocalSelectedOption(option);
     }
-  };
-
-  // Update description when selection changes
-  useEffect(() => {
-    if (selectedOption && descriptions.length > 0) {
-      const index = options.findIndex((option) => option === selectedOption);
-      if (index !== -1 && index < descriptions.length) {
-        setSelectedDescription(descriptions[index]);
+    
+    // Show loading state
+    setIsLoading(true);
+    setGeneratedContent("");
+    
+    try {
+      // Fetch the required response data
+      const responses = agentStore.getAllResponses();
+      const agentName = agentStore.getAgentName();
+      
+      // Find the responses for agent purpose and target users
+      const agentPurposeResponse = responses.find(r => r.questionId === "agentPurpose");
+      const targetUsersResponse = responses.find(r => r.questionId === "targetUsers");
+      
+      const agentPurpose = agentPurposeResponse?.answer as string || "";
+      const targetUsers = targetUsersResponse?.answer as string || "";
+      
+      // Make API call to generate content
+      const response = await fetch("/api/getPrompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          framework: option,
+          agentName,
+          agentPurpose,
+          targetUsers,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to generate content");
       }
-    } else {
-      setSelectedDescription("");
+      
+      const data = await response.text();
+      setGeneratedContent(data);
+    } catch (error) {
+      console.error("Error generating prompt:", error);
+      setGeneratedContent("**Error:** Failed to generate content. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  }, [selectedOption, options, descriptions]);
+  };
 
   // Keyboard keys for options (QWERTY)
   const keyboardKeys = ["Q", "W", "E", "R", "T", "Y"];
@@ -103,7 +143,7 @@ export const KeyboardMultipleChoiceInput: React.FC<
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [visibleOptions, keyboardKeys, handleSelect]);
+  }, [visibleOptions, keyboardKeys]);
 
   return (
     <div className="flex flex-col w-full h-full">
@@ -142,19 +182,30 @@ export const KeyboardMultipleChoiceInput: React.FC<
         <motion.div
           className="w-full rounded-lg p-6 h-full min-h-[400px] flex flex-col border-2 border-black dark:border-white"
           initial={{ opacity: 0 }}
-          animate={{ opacity: selectedDescription ? 1 : 0.9 }}
+          animate={{ opacity: 1 }}
         >
           <div className="flex-grow overflow-auto">
-            {selectedDescription ? (
-              typeof MarkdownRenderer === "function" ? (
-                <MarkdownRenderer>{selectedDescription}</MarkdownRenderer>
-              ) : (
-                <div>{selectedDescription}</div>
-              )
-            ) : (
+            {!selectedOption && (
               <p className="text-black dark:text-white">
-                Select an option to see details
+                Select a framework to see your system message
               </p>
+            )}
+            
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center h-full">
+                <div className="animate-pulse text-black dark:text-white mb-4">
+                  Generating system message...
+                </div>
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-black dark:bg-white rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-2 h-2 bg-black dark:bg-white rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-2 h-2 bg-black dark:bg-white rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                </div>
+              </div>
+            )}
+            
+            {generatedContent && !isLoading && (
+              <MarkdownRenderer>{generatedContent}</MarkdownRenderer>
             )}
           </div>
         </motion.div>

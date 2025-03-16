@@ -217,7 +217,7 @@ export const useAgentFormStore = create<AgentFormState>((set, get) => ({
     // Section 11: Completion
     {
       id: "completion",
-      text: "[agentName] is ready!",
+      text: "",
       type: "static",
       required: false,
     },
