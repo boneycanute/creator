@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAgentFormStore } from "@/lib/agent-store";
-import { Check } from "lucide-react";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 
 interface KeyboardMultipleChoiceInputProps {
@@ -88,7 +87,7 @@ export const KeyboardMultipleChoiceInput: React.FC<
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 flex-grow">
+      <div className="w-full grid grid-cols-1 md:grid-cols-[30%_70%] gap-8 flex-grow">
         <motion.div
           className="w-full flex flex-col space-y-4"
           variants={container}
@@ -99,10 +98,10 @@ export const KeyboardMultipleChoiceInput: React.FC<
             <motion.div key={option} variants={item} className="relative">
               <motion.div
                 onClick={() => handleSelect(option)}
-                className={`w-full p-4 text-left flex items-center justify-between min-h-[56px] border-2 border-l-4 transition-all ${
+                className={`w-full p-4 text-left flex items-center justify-between min-h-[56px] border-2 transition-all ${
                   selectedOption === option
-                    ? "border-black dark:border-white bg-black dark:bg-white text-white dark:text-black"
-                    : "border-black dark:border-white text-black dark:text-white"
+                    ? "border-black dark:border-white bg-black dark:bg-white text-white dark:text-black rounded-2xl"
+                    : "border-black dark:border-white text-black dark:text-white rounded-2xl"
                 }`}
                 whileHover={{ x: 5 }}
                 whileTap={{ scale: 0.98 }}
@@ -121,9 +120,9 @@ export const KeyboardMultipleChoiceInput: React.FC<
         </motion.div>
 
         <motion.div
-          className="w-full bg-gray-100 dark:bg-gray-900 rounded-lg p-6 h-full min-h-[400px] flex flex-col"
+          className="w-full  rounded-lg p-6 h-full min-h-[400px] flex flex-col border-2 border-black dark:border-white"
           initial={{ opacity: 0 }}
-          animate={{ opacity: selectedDescription ? 1 : 0.3 }}
+          animate={{ opacity: selectedDescription ? 1 : 0.9 }}
         >
           <div className="flex-grow overflow-auto">
             {selectedDescription ? (
@@ -133,7 +132,7 @@ export const KeyboardMultipleChoiceInput: React.FC<
                 <div>{selectedDescription}</div>
               )
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic">
+              <p className="text-black dark:text-white">
                 Select an option to see details
               </p>
             )}

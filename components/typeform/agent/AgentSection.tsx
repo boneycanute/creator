@@ -83,7 +83,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
   // For welcome section, render without animations to ensure immediate display
   if (isWelcomeSection && isActive) {
     return (
-      <div className="absolute w-full z-10">
+      <div className="absolute w-full h-full z-10">
         <div className="w-full mx-auto px-4">
           {/* No typing animation for welcome section */}
           <div className="mb-8">
@@ -118,7 +118,7 @@ export const AgentSection: React.FC<AgentSectionProps> = ({
       }}
     >
       <div
-        className={`w-full mx-auto px-4 ${
+        className={`w-full h-full mx-auto px-4 ${
           useWideContainer ? "max-w-11/12" : "max-w-2xl"
         }`}
       >
